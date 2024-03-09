@@ -20,17 +20,17 @@ class Tests {
     assertInGameWithOneCard(player = host)
     assertInGameWithOneCard(player = player2)
     assertInGameWithOneCard(player = player3)
-    val playersSortedByCard = listOf(host, player2, player3).sortedBy { (it.state as InGame).cards[0].value }
-    assertNoDuplicateCards(playersSortedByCard)
-    server.playCard(playersSortedByCard[0])
-    assertInGameWithNoCards(player = playersSortedByCard[0])
-    assertInGameWithOneCard(player = playersSortedByCard[1])
-    assertInGameWithOneCard(player = playersSortedByCard[2])
-    server.playCard(playersSortedByCard[1])
-    assertInGameWithNoCards(player = playersSortedByCard[0])
-    assertInGameWithNoCards(player = playersSortedByCard[1])
-    assertInGameWithOneCard(player = playersSortedByCard[2])
-    server.playCard(playersSortedByCard[2])
+    val players = mutableListOf(host, player2, player3)
+    assertNoDuplicateCards(players)
+    var nextPlayer = players.takeNextPlayer()!!
+    server.playCard(nextPlayer)
+    assertInGameWithNoCards(player = nextPlayer)
+    players.forEach { assertInGameWithOneCard(player = it) }
+    nextPlayer = players.takeNextPlayer()!!
+    server.playCard(nextPlayer)
+    assertInGameWithNoCards(player = nextPlayer)
+    players.forEach { assertInGameWithOneCard(player = it) }
+    server.playCard(players[0])
     assertEquals(GameWon, host.state)
     assertEquals(GameWon, player2.state)
     assertEquals(GameWon, player3.state)
@@ -49,16 +49,20 @@ class Tests {
     assertInGameWithOneCard(player = host)
     assertInGameWithOneCard(player = player2)
     assertInGameWithOneCard(player = player3)
-    val playersSortedByCard = listOf(host, player2, player3).sortedBy { (it.state as InGame).cards[0].value }
-    server.playCard(playersSortedByCard[0])
-    assertInGameWithNoCards(player = playersSortedByCard[0])
-    assertInGameWithOneCard(player = playersSortedByCard[1])
-    assertInGameWithOneCard(player = playersSortedByCard[2])
-    server.playCard(playersSortedByCard[2])
+    val players = mutableListOf(host, player2, player3)
+    val nextPlayer = players.takeNextPlayer()!!
+    server.playCard(nextPlayer)
+    assertInGameWithNoCards(player = nextPlayer)
+    players.forEach { assertInGameWithOneCard(player = it) }
+    players.takeNextPlayer()!!
+    server.playCard(players[0])
     assertEquals(GameLost, host.state)
     assertEquals(GameLost, player2.state)
     assertEquals(GameLost, player3.state)
   }
+
+  private fun MutableList<Player>.takeNextPlayer(): Player? =
+    minByOrNull { (it.state as InGame).cards[0].value }.also { remove(it) }
 
   private fun assertInGameWithOneCard(player: Player) {
     assertIs<InGame>(player.state)
