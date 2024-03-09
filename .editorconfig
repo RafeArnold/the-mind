@@ -7,3 +7,5 @@ indent_style = space
 indent_size = 2
 insert_final_newline = true
 trim_trailing_whitespace = true
+# noinspection EditorConfigKeyCorrectness
+ktlint_standard_no-empty-first-line-in-class-body = disabled
