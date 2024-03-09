@@ -1,5 +1,7 @@
 package uk.co.rafearnold.mind
 
+import java.util.UUID
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -53,31 +55,69 @@ class Tests {
     assertEquals(GameLost, player2.state)
     assertEquals(GameLost, player3.state)
   }
+}
 
-  private fun MutableList<Player>.takeNextPlayer(): Player? =
-    minByOrNull { (it.state as InGame).cards[0].value }.also { remove(it) }
+private fun MutableList<Player>.takeNextPlayer(): Player? =
+  minByOrNull { (it.state as InGame).cards[0].value }.also { remove(it) }
 
-  private fun assertInGameWithOneCard(player: Player) {
-    assertInGameWithNCards(player, 1)
+private fun assertInGameWithOneCard(player: Player) {
+  assertInGameWithNCards(player, 1)
+}
+
+private fun assertInGameWithNoCards(player: Player) {
+  assertInGameWithNCards(player, 0)
+}
+
+private fun assertInGameWithNCards(
+  player: Player,
+  n: Int,
+) {
+  assertIs<InGame>(player.state)
+  val cards = (player.state as InGame).cards
+  assertEquals(n, cards.size)
+  for (i in 0 until n) {
+    val card = cards[i]
+    assertTrue(card.value >= 1)
+    assertTrue(card.value <= 100)
+  }
+}
+
+private fun List<Player>.assertNoDuplicateCards() {
+  val allCards = flatMap { (it.state as InGame).cards.map { card -> card.value } }
+  assertEquals(allCards, allCards.distinct())
+}
+
+class TestSupportTests {
+
+  @Test
+  fun `takes next player`() {
+    val player1 = createInGamePlayer(1)
+    val player2 = createInGamePlayer(2)
+    val player3 = createInGamePlayer(3)
+    val player4 = createInGamePlayer(4)
+    val player5 = createInGamePlayer(5)
+    val players = mutableListOf(player1, player4, player2, player5, player3)
+    var nextPlayer = players.takeNextPlayer()
+    assertEquals(player1, nextPlayer)
+    assertEquals(listOf(player4, player2, player5, player3), players)
+    nextPlayer = players.takeNextPlayer()
+    assertEquals(player2, nextPlayer)
+    assertEquals(listOf(player4, player5, player3), players)
+    nextPlayer = players.takeNextPlayer()
+    assertEquals(player3, nextPlayer)
+    assertEquals(listOf(player4, player5), players)
+    nextPlayer = players.takeNextPlayer()
+    assertEquals(player4, nextPlayer)
+    assertEquals(listOf(player5), players)
+    nextPlayer = players.takeNextPlayer()
+    assertEquals(player5, nextPlayer)
+    assertEquals(listOf(), players)
   }
 
-  private fun assertInGameWithNoCards(player: Player) {
-    assertInGameWithNCards(player, 0)
-  }
-
-  private fun assertInGameWithNCards(player: Player, n: Int) {
-    assertIs<InGame>(player.state)
-    val cards = (player.state as InGame).cards
-    assertEquals(n, cards.size)
-    for (i in 0 until n) {
-      val card = cards[n]
-      assertTrue(card.value >= 1)
-      assertTrue(card.value <= 100)
-    }
-  }
-
-  private fun List<Player>.assertNoDuplicateCards() {
-    val allCards = flatMap { (it.state as InGame).cards.map { card -> card.value } }
-    assertEquals(allCards, allCards.distinct())
-  }
+  private fun createInGamePlayer(vararg cardValues: Int): Player =
+    Player(
+      lobbyId = UUID.randomUUID().toString(),
+      isHost = Random.nextBoolean(),
+      state = InGame(cards = cardValues.map { Card(value = it) }.toMutableList()),
+    )
 }
