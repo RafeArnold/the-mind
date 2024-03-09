@@ -21,6 +21,7 @@ class Tests {
     assertInGameWithOneCard(player = player2)
     assertInGameWithOneCard(player = player3)
     val playersSortedByCard = listOf(host, player2, player3).sortedBy { (it.state as InGame).cards[0].value }
+    assertNoDuplicateCards(playersSortedByCard)
     server.playCard(playersSortedByCard[0])
     assertInGameWithNoCards(player = playersSortedByCard[0])
     assertInGameWithOneCard(player = playersSortedByCard[1])
@@ -72,5 +73,10 @@ class Tests {
     assertIs<InGame>(player.state)
     val cards = (player.state as InGame).cards
     assertEquals(0, cards.size)
+  }
+
+  private fun assertNoDuplicateCards(players: List<Player>) {
+    val allCards = players.flatMap { (it.state as InGame).cards.map { card -> card.value } }
+    assertEquals(allCards, allCards.distinct())
   }
 }
