@@ -21,7 +21,7 @@ class Tests {
     assertInGameWithOneCard(player = player2)
     assertInGameWithOneCard(player = player3)
     val players = mutableListOf(host, player2, player3)
-    assertNoDuplicateCards(players)
+    players.assertNoDuplicateCards()
     var nextPlayer = players.takeNextPlayer()!!
     server.playCard(nextPlayer)
     assertInGameWithNoCards(player = nextPlayer)
@@ -58,22 +58,26 @@ class Tests {
     minByOrNull { (it.state as InGame).cards[0].value }.also { remove(it) }
 
   private fun assertInGameWithOneCard(player: Player) {
-    assertIs<InGame>(player.state)
-    val cards = (player.state as InGame).cards
-    assertEquals(1, cards.size)
-    val card = cards[0]
-    assertTrue(card.value >= 1)
-    assertTrue(card.value <= 100)
+    assertInGameWithNCards(player, 1)
   }
 
   private fun assertInGameWithNoCards(player: Player) {
-    assertIs<InGame>(player.state)
-    val cards = (player.state as InGame).cards
-    assertEquals(0, cards.size)
+    assertInGameWithNCards(player, 0)
   }
 
-  private fun assertNoDuplicateCards(players: List<Player>) {
-    val allCards = players.flatMap { (it.state as InGame).cards.map { card -> card.value } }
+  private fun assertInGameWithNCards(player: Player, n: Int) {
+    assertIs<InGame>(player.state)
+    val cards = (player.state as InGame).cards
+    assertEquals(n, cards.size)
+    for (i in 0 until n) {
+      val card = cards[n]
+      assertTrue(card.value >= 1)
+      assertTrue(card.value <= 100)
+    }
+  }
+
+  private fun List<Player>.assertNoDuplicateCards() {
+    val allCards = flatMap { (it.state as InGame).cards.map { card -> card.value } }
     assertEquals(allCards, allCards.distinct())
   }
 }
