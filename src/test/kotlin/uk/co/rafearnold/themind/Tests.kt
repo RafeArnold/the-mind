@@ -1,4 +1,4 @@
-package uk.co.rafearnold.mind
+package uk.co.rafearnold.themind
 
 import java.util.UUID
 import kotlin.random.Random
