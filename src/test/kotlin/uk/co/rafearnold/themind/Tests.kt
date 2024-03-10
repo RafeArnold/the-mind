@@ -4,6 +4,7 @@ import java.util.UUID
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -11,7 +12,10 @@ class Tests {
 
   @Test
   fun `all cards played in correct order`() {
-    val server = SimpleServer(gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1))
+    val server =
+      SimpleServer(
+        gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
+      )
     val (host, gameId) = server.createGame()
     assertEquals(InLobby, host.state)
     val player2 = server.joinGame(gameId)
@@ -42,7 +46,10 @@ class Tests {
 
   @Test
   fun `card played in wrong order`() {
-    val server = SimpleServer(gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1))
+    val server =
+      SimpleServer(
+        gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
+      )
     val (host, gameId) = server.createGame()
     val player2 = server.joinGame(gameId)
     val player3 = server.joinGame(gameId)
@@ -59,7 +66,10 @@ class Tests {
 
   @Test
   fun `all cards played in correct order with multiple rounds`() {
-    val server = SimpleServer(gameConfig = GameConfig(roundCount = 3, startingLivesCount = 1))
+    val server =
+      SimpleServer(
+        gameConfig = GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0),
+      )
     val (host, gameId) = server.createGame()
     val player2 = server.joinGame(gameId)
     val player3 = server.joinGame(gameId)
@@ -82,7 +92,10 @@ class Tests {
 
   @Test
   fun `cards played in wrong order with multiple rounds and multiple lives`() {
-    val server = SimpleServer(gameConfig = GameConfig(roundCount = 3, startingLivesCount = 3))
+    val server =
+      SimpleServer(
+        gameConfig = GameConfig(roundCount = 3, startingLivesCount = 3, startingStarsCount = 0),
+      )
     val (host, gameId) = server.createGame()
     val player2 = server.joinGame(gameId)
     val player3 = server.joinGame(gameId)
@@ -113,9 +126,114 @@ class Tests {
     server.playCard(allPlayers[1])
     allPlayers.forEach { assertEquals(GameLost, it.state) }
   }
+
+  @Test
+  fun `star thrown`() {
+    val server =
+      SimpleServer(
+        gameConfig = GameConfig(roundCount = 2, startingLivesCount = 1, startingStarsCount = 2),
+      )
+    val (host, gameId) = server.createGame()
+    val player2 = server.joinGame(gameId)
+    val player3 = server.joinGame(gameId)
+    server.startGame(host)
+
+    val allPlayers = mutableListOf(host, player2, player3)
+    allPlayers.sortByMinCardValue()
+    allPlayers.forEach { assertEquals(2, it.stars) }
+    allPlayers.forEach { assertFalse(it.votingToThrowStar) }
+
+    server.playCard(allPlayers[0])
+
+    server.voteToThrowStar(player2)
+    assertTrue(player2.votingToThrowStar)
+    assertFalse(host.votingToThrowStar)
+    assertFalse(player3.votingToThrowStar)
+    allPlayers.forEach { assertEquals(2, it.stars) }
+    allPlayers[0].assertInGameWithNCards(0)
+    allPlayers[1].assertInGameWithNCards(1)
+    allPlayers[2].assertInGameWithNCards(1)
+
+    server.voteToThrowStar(host)
+    assertTrue(player2.votingToThrowStar)
+    assertTrue(host.votingToThrowStar)
+    assertFalse(player3.votingToThrowStar)
+    allPlayers.forEach { assertEquals(2, it.stars) }
+    allPlayers[0].assertInGameWithNCards(0)
+    allPlayers[1].assertInGameWithNCards(1)
+    allPlayers[2].assertInGameWithNCards(1)
+
+    server.voteToThrowStar(player3)
+    allPlayers.forEach { it.assertInGameWithNCards(2) }
+    allPlayers.forEach { assertEquals(1, it.stars) }
+    allPlayers.forEach { assertFalse(it.votingToThrowStar) }
+
+    allPlayers[0].cards = mutableListOf(Card(value = 11), Card(value = 50))
+    allPlayers[1].cards = mutableListOf(Card(value = 33), Card(value = 88))
+    allPlayers[2].cards = mutableListOf(Card(value = 17), Card(value = 90))
+
+    server.playCard(allPlayers[0])
+    server.playCard(allPlayers[2])
+    server.playCard(allPlayers[1])
+
+    server.voteToThrowStar(allPlayers[0])
+    assertTrue(allPlayers[0].votingToThrowStar)
+    assertFalse(allPlayers[1].votingToThrowStar)
+    assertFalse(allPlayers[2].votingToThrowStar)
+    allPlayers.forEach { assertEquals(1, it.stars) }
+    allPlayers.forEach { it.assertInGameWithNCards(1) }
+
+    server.voteToThrowStar(allPlayers[1])
+    assertTrue(allPlayers[0].votingToThrowStar)
+    assertTrue(allPlayers[1].votingToThrowStar)
+    assertFalse(allPlayers[2].votingToThrowStar)
+    allPlayers.forEach { assertEquals(1, it.stars) }
+    allPlayers.forEach { it.assertInGameWithNCards(1) }
+
+    server.voteToThrowStar(allPlayers[2])
+    allPlayers.forEach { assertEquals(GameWon, it.state) }
+  }
+
+  @Test
+  fun `playing a card resets votes to throw star`() {
+    val server =
+      SimpleServer(
+        gameConfig = GameConfig(roundCount = 2, startingLivesCount = 1, startingStarsCount = 1),
+      )
+    val (host, gameId) = server.createGame()
+    val player2 = server.joinGame(gameId)
+    val player3 = server.joinGame(gameId)
+    server.startGame(host)
+
+    val allPlayers = mutableListOf(host, player2, player3)
+    allPlayers.sortByMinCardValue()
+
+    server.voteToThrowStar(allPlayers[0])
+    server.voteToThrowStar(allPlayers[1])
+
+    server.playCard(allPlayers[0])
+    allPlayers.forEach { assertFalse(it.votingToThrowStar) }
+    allPlayers.forEach { assertEquals(1, it.stars) }
+
+    server.voteToThrowStar(allPlayers[0])
+
+    server.playCard(allPlayers[1])
+    allPlayers.forEach { assertFalse(it.votingToThrowStar) }
+    allPlayers.forEach { assertEquals(1, it.stars) }
+
+    server.voteToThrowStar(allPlayers[0])
+    server.voteToThrowStar(allPlayers[2])
+
+    server.playCard(allPlayers[2])
+    allPlayers.forEach { assertFalse(it.votingToThrowStar) }
+    allPlayers.forEach { assertEquals(1, it.stars) }
+    allPlayers.forEach { it.assertInGameWithNCards(2) }
+  }
 }
 
 private fun List<Player>.nextPlayer(): Player = minByOrNull { it.minCardValue() }!!
+
+private fun MutableList<Player>.sortByMinCardValue() = sortBy { it.minCardValue() }
 
 private fun Player.minCardValue(): Int = cards.minOfOrNull { card -> card.value } ?: Int.MAX_VALUE
 
@@ -147,6 +265,15 @@ private var Player.cards: MutableList<Card>
   set(cards) {
     (state as InGame).cards = cards
   }
+
+private val Player.lives: Int
+  get() = (state as InGame).lives
+
+private val Player.stars: Int
+  get() = (state as InGame).stars
+
+private val Player.votingToThrowStar: Boolean
+  get() = (state as InGame).votingToThrowStar
 
 class TestSupportTests {
 
@@ -181,7 +308,12 @@ class TestSupportTests {
     Player(
       gameId = UUID.randomUUID().toString(),
       isHost = Random.nextBoolean(),
-      state = InGame(cards = cardValues.map { Card(value = it) }.shuffled().toMutableList()),
-      lives = Random.nextInt(1, 3),
+      state =
+        InGame(
+          cards = cardValues.map { Card(value = it) }.shuffled().toMutableList(),
+          lives = Random.nextInt(1, 3),
+          stars = Random.nextInt(0, 2),
+          votingToThrowStar = Random.nextBoolean(),
+        ),
     )
 }
