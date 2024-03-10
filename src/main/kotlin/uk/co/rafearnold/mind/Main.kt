@@ -4,22 +4,22 @@ import java.util.UUID
 
 interface Server {
 
-  fun createLobby(): CreateLobbyResponse
+  fun createGame(): CreateGameResponse
 
-  fun joinLobby(lobbyId: String): Player
+  fun joinGame(gameId: String): Player
 
   fun startGame(player: Player)
 
   fun playCard(player: Player)
 }
 
-data class Player(val lobbyId: String, val isHost: Boolean, var state: ClientState = InLobby)
+data class Player(val gameId: String, val isHost: Boolean, var state: ClientState = InLobby)
 
 sealed interface ClientState
 
 data object InLobby : ClientState
 
-data class InGame(val cards: MutableList<Card>) : ClientState
+data class InGame(var cards: MutableList<Card>) : ClientState
 
 data object GameWon : ClientState
 
@@ -27,30 +27,32 @@ data object GameLost : ClientState
 
 data class Card(val value: Int)
 
-data class CreateLobbyResponse(val host: Player, val lobbyId: String)
+data class CreateGameResponse(val host: Player, val gameId: String)
 
-class SimpleServer : Server {
+data class GameConfig(val roundCount: Int)
+
+class SimpleServer(private val gameConfig: GameConfig) : Server {
 
   private val games: MutableList<Game> = mutableListOf()
 
-  override fun createLobby(): CreateLobbyResponse {
-    val lobbyId = UUID.randomUUID().toString()
-    val host = Player(lobbyId = lobbyId, isHost = true)
-    val game = Game(id = lobbyId, players = mutableListOf(host))
+  override fun createGame(): CreateGameResponse {
+    val gameId = UUID.randomUUID().toString()
+    val host = Player(gameId = gameId, isHost = true)
+    val game = Game(id = gameId, players = mutableListOf(host), currentRound = 1)
     games.add(game)
-    return CreateLobbyResponse(host = host, lobbyId = lobbyId)
+    return CreateGameResponse(host = host, gameId = gameId)
   }
 
-  override fun joinLobby(lobbyId: String): Player {
-    val lobby = getGame(lobbyId = lobbyId)
-    val player = Player(lobbyId = lobbyId, isHost = false)
-    lobby.players.add(player)
+  override fun joinGame(gameId: String): Player {
+    val game = getGame(gameId = gameId)
+    val player = Player(gameId = gameId, isHost = false)
+    game.players.add(player)
     return player
   }
 
   override fun startGame(player: Player) {
     val game = getGame(player = player)
-    val deck = (1..100).shuffled().iterator()
+    val deck = shuffledDeck()
     for (@Suppress("NAME_SHADOWING") player in game.players) {
       player.state = InGame(cards = mutableListOf(Card(deck.next())))
     }
@@ -58,9 +60,21 @@ class SimpleServer : Server {
 
   override fun playCard(player: Player) {
     val game = getGame(player = player)
-    val removedCard = (player.state as InGame).cards.removeFirst()
+    val cards = (player.state as InGame).cards
+    val removedCard = cards.minByOrNull { it.value }!!
+    cards.remove(removedCard)
     if (game.players.all { (it.state as InGame).cards.isEmpty() }) {
-      game.setState(GameWon)
+      // Round complete.
+      if (game.currentRound == gameConfig.roundCount) {
+        game.setState(GameWon)
+      } else {
+        game.currentRound++
+        val deck = shuffledDeck()
+        for (@Suppress("NAME_SHADOWING") player in game.players) {
+          (player.state as InGame).cards =
+            (1..game.currentRound).map { Card(deck.next()) }.toMutableList()
+        }
+      }
     } else if (removedCard.value >
       game.players.flatMap { (it.state as InGame).cards.map { card -> card.value } }.min()
     ) {
@@ -74,9 +88,11 @@ class SimpleServer : Server {
     }
   }
 
-  private fun getGame(player: Player): Game = getGame(lobbyId = player.lobbyId)
+  private fun getGame(player: Player): Game = getGame(gameId = player.gameId)
 
-  private fun getGame(lobbyId: String): Game = games.first { it.id == lobbyId }
+  private fun getGame(gameId: String): Game = games.first { it.id == gameId }
+
+  private fun shuffledDeck(): Iterator<Int> = (1..100).shuffled().iterator()
 }
 
-private data class Game(val id: String, val players: MutableList<Player>)
+private data class Game(val id: String, val players: MutableList<Player>, var currentRound: Int)
