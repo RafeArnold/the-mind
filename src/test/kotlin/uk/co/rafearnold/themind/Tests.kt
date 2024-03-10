@@ -11,7 +11,7 @@ class Tests {
 
   @Test
   fun `all cards played in correct order`() {
-    val server = SimpleServer(gameConfig = GameConfig(roundCount = 1))
+    val server = SimpleServer(gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1))
     val (host, gameId) = server.createGame()
     assertEquals(InLobby, host.state)
     val player2 = server.joinGame(gameId)
@@ -42,7 +42,7 @@ class Tests {
 
   @Test
   fun `card played in wrong order`() {
-    val server = SimpleServer(gameConfig = GameConfig(roundCount = 1))
+    val server = SimpleServer(gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1))
     val (host, gameId) = server.createGame()
     val player2 = server.joinGame(gameId)
     val player3 = server.joinGame(gameId)
@@ -59,7 +59,7 @@ class Tests {
 
   @Test
   fun `all cards played in correct order with multiple rounds`() {
-    val server = SimpleServer(gameConfig = GameConfig(roundCount = 3))
+    val server = SimpleServer(gameConfig = GameConfig(roundCount = 3, startingLivesCount = 1))
     val (host, gameId) = server.createGame()
     val player2 = server.joinGame(gameId)
     val player3 = server.joinGame(gameId)
@@ -79,10 +79,45 @@ class Tests {
     }
     allPlayers.forEach { assertEquals(GameWon, it.state) }
   }
+
+  @Test
+  fun `cards played in wrong order with multiple rounds and multiple lives`() {
+    val server = SimpleServer(gameConfig = GameConfig(roundCount = 3, startingLivesCount = 3))
+    val (host, gameId) = server.createGame()
+    val player2 = server.joinGame(gameId)
+    val player3 = server.joinGame(gameId)
+    server.startGame(host)
+    val allPlayers = mutableListOf(host, player2, player3)
+    allPlayers.forEach { assertEquals(3, it.lives) }
+
+    allPlayers[0].cards = mutableListOf(Card(value = 73))
+    allPlayers[1].cards = mutableListOf(Card(value = 82))
+    allPlayers[2].cards = mutableListOf(Card(value = 84))
+
+    server.playCard(allPlayers.nextPlayer())
+
+    server.playCard(allPlayers[2])
+    allPlayers.forEach { assertEquals(2, it.lives) }
+
+    allPlayers.forEach { it.assertInGameWithNCards(2) }
+    allPlayers[0].cards = mutableListOf(Card(value = 25), Card(value = 64))
+    allPlayers[1].cards = mutableListOf(Card(value = 53), Card(value = 69))
+    allPlayers[2].cards = mutableListOf(Card(value = 63), Card(value = 77))
+
+    server.playCard(allPlayers[2])
+    allPlayers.forEach { assertEquals(1, it.lives) }
+    assertEquals(mutableListOf(Card(value = 64)), allPlayers[0].cards)
+    assertEquals(mutableListOf(Card(value = 69)), allPlayers[1].cards)
+    assertEquals(mutableListOf(Card(value = 77)), allPlayers[2].cards)
+
+    server.playCard(allPlayers[1])
+    allPlayers.forEach { assertEquals(GameLost, it.state) }
+  }
 }
 
-private fun List<Player>.nextPlayer(): Player =
-  minByOrNull { (it.state as InGame).cards.minOfOrNull { card -> card.value } ?: Int.MAX_VALUE }!!
+private fun List<Player>.nextPlayer(): Player = minByOrNull { it.minCardValue() }!!
+
+private fun Player.minCardValue(): Int = cards.minOfOrNull { card -> card.value } ?: Int.MAX_VALUE
 
 private fun Player.assertInGameWithOneCard() {
   this.assertInGameWithNCards(1)
@@ -94,7 +129,6 @@ private fun Player.assertInGameWithNoCards() {
 
 private fun Player.assertInGameWithNCards(n: Int) {
   assertIs<InGame>(state)
-  val cards = (state as InGame).cards
   assertEquals(n, cards.size)
   for (i in 0 until n) {
     val card = cards[i]
@@ -104,9 +138,15 @@ private fun Player.assertInGameWithNCards(n: Int) {
 }
 
 private fun List<Player>.assertNoDuplicateCards() {
-  val allCards = flatMap { (it.state as InGame).cards.map { card -> card.value } }
+  val allCards = flatMap { it.cards.map { card -> card.value } }
   assertEquals(allCards, allCards.distinct())
 }
+
+private var Player.cards: MutableList<Card>
+  get() = (state as InGame).cards
+  set(cards) {
+    (state as InGame).cards = cards
+  }
 
 class TestSupportTests {
 
@@ -134,7 +174,7 @@ class TestSupportTests {
   private fun MutableList<Player>.assertNextPlayerEqualsAndRemoveCard(expected: Player) {
     val nextPlayer = nextPlayer()
     assertEquals(expected, nextPlayer)
-    (nextPlayer.state as InGame).cards.apply { remove(minByOrNull { it.value }) }
+    nextPlayer.cards.apply { remove(minByOrNull { it.value }) }
   }
 
   private fun createInGamePlayer(vararg cardValues: Int): Player =
@@ -142,5 +182,6 @@ class TestSupportTests {
       gameId = UUID.randomUUID().toString(),
       isHost = Random.nextBoolean(),
       state = InGame(cards = cardValues.map { Card(value = it) }.shuffled().toMutableList()),
+      lives = Random.nextInt(1, 3),
     )
 }
