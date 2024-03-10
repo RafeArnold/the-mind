@@ -1,26 +1,26 @@
 plugins {
-    kotlin("jvm") version "1.9.22"
-    id("org.jmailen.kotlinter") version "4.2.0"
+  kotlin("jvm") version "1.9.22"
+  id("org.jmailen.kotlinter") version "4.2.0"
 }
 
 group = "uk.co.rafearnold"
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
+  testImplementation(kotlin("test"))
 }
 
 tasks.test {
-    useJUnitPlatform()
+  useJUnitPlatform()
 }
 
 kotlin {
-    jvmToolchain(20)
+  jvmToolchain(20)
 }
 
 tasks.check {
-    dependsOn("installKotlinterPrePushHook")
+  dependsOn("installKotlinterPrePushHook")
 }
