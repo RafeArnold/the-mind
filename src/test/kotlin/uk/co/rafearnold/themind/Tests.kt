@@ -16,7 +16,8 @@ class Tests {
       SimpleServer(
         gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
       )
-    val (host, gameId) = server.createGame()
+    val host = server.createGame()
+    val gameId = host.gameId
     assertEquals(InLobby, host.state)
     val player2 = server.joinGame(gameId)
     assertEquals(InLobby, player2.state)
@@ -50,7 +51,8 @@ class Tests {
       SimpleServer(
         gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
       )
-    val (host, gameId) = server.createGame()
+    val host = server.createGame()
+    val gameId = host.gameId
     val player2 = server.joinGame(gameId)
     val player3 = server.joinGame(gameId)
     server.startGame(host)
@@ -70,7 +72,8 @@ class Tests {
       SimpleServer(
         gameConfig = GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0),
       )
-    val (host, gameId) = server.createGame()
+    val host = server.createGame()
+    val gameId = host.gameId
     val player2 = server.joinGame(gameId)
     val player3 = server.joinGame(gameId)
     server.startGame(host)
@@ -96,7 +99,8 @@ class Tests {
       SimpleServer(
         gameConfig = GameConfig(roundCount = 3, startingLivesCount = 3, startingStarsCount = 0),
       )
-    val (host, gameId) = server.createGame()
+    val host = server.createGame()
+    val gameId = host.gameId
     val player2 = server.joinGame(gameId)
     val player3 = server.joinGame(gameId)
     server.startGame(host)
@@ -133,7 +137,8 @@ class Tests {
       SimpleServer(
         gameConfig = GameConfig(roundCount = 2, startingLivesCount = 1, startingStarsCount = 2),
       )
-    val (host, gameId) = server.createGame()
+    val host = server.createGame()
+    val gameId = host.gameId
     val player2 = server.joinGame(gameId)
     val player3 = server.joinGame(gameId)
     server.startGame(host)
@@ -200,7 +205,8 @@ class Tests {
       SimpleServer(
         gameConfig = GameConfig(roundCount = 2, startingLivesCount = 1, startingStarsCount = 1),
       )
-    val (host, gameId) = server.createGame()
+    val host = server.createGame()
+    val gameId = host.gameId
     val player2 = server.joinGame(gameId)
     val player3 = server.joinGame(gameId)
     server.startGame(host)

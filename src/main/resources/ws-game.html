@@ -1,0 +1,18 @@
+<div id="connection-window">
+  <div data-testid="card-list">
+    <ul>
+      {% for card in model.cards %}
+      <li data-testid="card-item">
+        {% if loop.first %}
+        <form ws-send>
+          <input type="hidden" name="action" value="play">
+          <button type="submit" data-testid="play-card-button">{{ card }}</button>
+        </form>
+        {% else %}
+        {{ card }}
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>

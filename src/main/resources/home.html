@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div hx-boost="true">
+  <form method="post" action="/create">
+    <input type="submit" value="create game" data-testid="create-game-button">
+  </form>
+  <form method="post" action="/join">
+    <label>join game: <input type="text" name="gameId" data-testid="join-game-game-id"></label>
+    <input type="submit" value="join game" data-testid="join-game-button">
+  </form>
+</div>
+{% endblock %}
