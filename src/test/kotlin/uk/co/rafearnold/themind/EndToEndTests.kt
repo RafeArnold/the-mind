@@ -1,7 +1,6 @@
 package uk.co.rafearnold.themind
 
 import com.microsoft.playwright.Browser
-import com.microsoft.playwright.BrowserContext
 import com.microsoft.playwright.Locator
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.Playwright
@@ -36,25 +35,7 @@ class EndToEndTests {
 
   @Test
   fun `complete full game`() {
-    val hostContext: BrowserContext = browser.newContext()
-    val player2Context: BrowserContext = browser.newContext()
-    val player3Context: BrowserContext = browser.newContext()
-
-    val hostPage: Page = hostContext.newPage()
-    hostPage.navigateToHome(port = server.port())
-    val gameId: String = hostPage.createGame()
-
-    val player2Page = player2Context.newPage()
-    player2Page.navigateToHome(port = server.port())
-    player2Page.joinGame(gameId)
-
-    val player3Page = player3Context.newPage()
-    player3Page.navigateToHome(port = server.port())
-    player3Page.joinGame(gameId)
-
-    hostPage.startGame()
-
-    val allPlayers = listOf(hostPage, player2Page, player3Page)
+    val allPlayers = server.startNewGame(browser)
 
     allPlayers.forEach { it.assertHasNCards(1) }
     repeat(2) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
@@ -68,6 +49,29 @@ class EndToEndTests {
 
     allPlayers.forEach { it.assertHasWon() }
   }
+
+  @Test
+  fun `lose a game`() {
+    val allPlayers = server.startNewGame(browser)
+
+    val incorrectNextPlayer = allPlayers.first { it != allPlayers.nextPlayer() }
+    incorrectNextPlayer.playCard(toCompleteRound = true)
+
+    allPlayers.forEach { it.assertHasLost() }
+  }
+}
+
+private fun Http4kServer.startNewGame(browser: Browser): List<Page> {
+  val players: List<Page> = List(3) { browser.newContext().newPage() }
+  players.forEach { it.navigateToHome(port = port()) }
+  val gameId: String = players[0].createGame()
+  players.drop(1).forEach { it.joinGame(gameId) }
+  players[0].startGame()
+  return players
+}
+
+private fun Page.assertHasLost() {
+  assertThat(getByTestId("loser-text")).isVisible()
 }
 
 private fun Page.assertHasWon() {

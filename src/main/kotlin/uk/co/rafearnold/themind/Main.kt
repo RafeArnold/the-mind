@@ -147,7 +147,7 @@ private fun Websocket.sendView(
 ) {
   val model: ViewModel =
     when (player.state) {
-      is GameLost -> TODO()
+      is GameLost -> WsGameLostModel
       is GameWon -> WsGameWonModel
       is InGame -> WsGameViewModel(cards = player.cards.map { card -> card.value }.sorted())
       is InLobby -> TODO()
@@ -211,6 +211,10 @@ data class WsGameViewModel(val cards: List<Int>) : ViewModel {
 
 object WsGameWonModel : ViewModel {
   override fun template(): String = "ws-won"
+}
+
+object WsGameLostModel : ViewModel {
+  override fun template(): String = "ws-lost"
 }
 
 class PebbleTemplateRenderer(
