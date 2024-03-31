@@ -101,7 +101,12 @@ class Index(view: BiDiBodyLens<ViewModel>, players: Map<String, Player>) : Routi
       HomeViewModel
     } else {
       when (player.state) {
-        is InLobby -> LobbyViewModel(gameId = player.gameId, isHost = player.isHost)
+        is InLobby ->
+          LobbyViewModel(
+            gameId = player.gameId,
+            isHost = player.isHost,
+            allPlayers = (player.state as InLobby).allPlayers,
+          )
         is InGame ->
           GameViewModel(
             currentLivesCount = player.lives,
@@ -172,7 +177,12 @@ private fun Websocket.sendView(
           cards = player.cards.map { card -> card.value }.sorted(),
           playersVotingToThrowStar = player.playersVotingToThrowStar,
         )
-      is InLobby -> TODO()
+      is InLobby ->
+        WsLobbyViewModel(
+          gameId = player.gameId,
+          isHost = player.isHost,
+          allPlayers = (player.state as InLobby).allPlayers,
+        )
     }
   send(view(model))
 }
@@ -223,8 +233,26 @@ object HomeViewModel : ViewModel {
   override fun template(): String = "home"
 }
 
-data class LobbyViewModel(val gameId: String, val isHost: Boolean) : ViewModel {
+data class LobbyViewModel(
+  override val gameId: String,
+  override val isHost: Boolean,
+  override val allPlayers: List<String>,
+) : LobbyView, ViewModel {
   override fun template(): String = "lobby"
+}
+
+data class WsLobbyViewModel(
+  override val gameId: String,
+  override val isHost: Boolean,
+  override val allPlayers: List<String>,
+) : LobbyView, ViewModel {
+  override fun template(): String = "ws-lobby"
+}
+
+interface LobbyView {
+  val gameId: String
+  val isHost: Boolean
+  val allPlayers: List<String>
 }
 
 data class GameViewModel(
@@ -298,7 +326,7 @@ data class Player(
   val name: String,
   val gameId: String,
   val isHost: Boolean,
-  var state: ClientState = InLobby,
+  var state: ClientState,
 ) {
   private val updateHandlers: MutableMap<String, () -> Unit> = mutableMapOf()
 
@@ -317,7 +345,9 @@ data class Player(
 
 sealed interface ClientState
 
-data object InLobby : ClientState
+data class InLobby(
+  val allPlayers: MutableList<String>,
+) : ClientState
 
 data class InGame(
   var cards: MutableList<Card>,
@@ -341,7 +371,13 @@ class SimpleServer(private val gameConfig: GameConfig) : Server {
 
   override fun createGame(playerName: String): Player {
     val gameId = UUID.randomUUID().toString()
-    val host = Player(name = playerName, gameId = gameId, isHost = true)
+    val host =
+      Player(
+        name = playerName,
+        gameId = gameId,
+        isHost = true,
+        state = InLobby(allPlayers = mutableListOf(playerName)),
+      )
     val game = Game(id = gameId, players = mutableListOf(host), currentRound = 1)
     games.add(game)
     return host
@@ -352,8 +388,17 @@ class SimpleServer(private val gameConfig: GameConfig) : Server {
     gameId: String,
   ): Player {
     val game = getGame(gameId = gameId)
-    val player = Player(name = playerName, gameId = gameId, isHost = false)
-    game.players.add(player)
+    val allPlayers = game.players
+    val player =
+      Player(
+        name = playerName,
+        gameId = gameId,
+        isHost = false,
+        state = InLobby(allPlayers = allPlayers.map { it.name }.toMutableList()),
+      )
+    allPlayers.add(player)
+    allPlayers.forEach { (it.state as InLobby).allPlayers.add(playerName) }
+    game.triggerUpdate()
     return player
   }
 

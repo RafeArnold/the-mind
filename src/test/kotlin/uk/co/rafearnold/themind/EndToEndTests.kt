@@ -172,6 +172,24 @@ class EndToEndTests {
     allPlayers.forEach { it.assertHasNThrowingStars(0) }
     allPlayers.forEach { it.assertVoteButtonDisabled() }
   }
+
+  @Test
+  fun `all players in lobby are displayed`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+
+    val allPlayers: List<PlayerContext> = browser.createPlayerContexts(3)
+    allPlayers.forEach { it.navigateToHome(port = server.port()) }
+
+    val gameId: String = allPlayers[0].createGame()
+    allPlayers[0].assertPlayersAre(listOf(allPlayers[0].name))
+
+    allPlayers[1].joinGame(gameId)
+    allPlayers[0].assertPlayersAre(listOf(allPlayers[0].name, allPlayers[1].name))
+    allPlayers[1].assertPlayersAre(listOf(allPlayers[0].name, allPlayers[1].name))
+
+    allPlayers[2].joinGame(gameId)
+    allPlayers.forEach { it.assertPlayersAre(allPlayers.map { p -> p.name }) }
+  }
 }
 
 private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
@@ -185,6 +203,16 @@ private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
 
 private fun Browser.createPlayerContexts(n: Int): List<PlayerContext> =
   playerNames.shuffled().take(n).map { PlayerContext(name = it, page = newContext().newPage()) }
+
+private fun PlayerContext.assertPlayersAre(names: List<String>) {
+  page.assertPlayersAre(names = names)
+}
+
+private fun Page.assertPlayersAre(names: List<String>) {
+  val allPlayers = getByTestId("all-players").getByTestId("player-name")
+  assertThat(allPlayers).hasCount(names.size)
+  assertThat(allPlayers).hasText(names.toTypedArray())
+}
 
 private fun PlayerContext.assertHasNThrowingStars(n: Int) {
   page.assertHasNThrowingStars(n = n)

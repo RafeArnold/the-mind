@@ -1,13 +1,5 @@
 {% extends "connect.html" %}
 
 {% block connectContent %}
-<div id="connection-window">
-  game id: <b data-testid="game-id">{{model.gameId}}</b>
-  {% if model.isHost %}
-  <form ws-send>
-    <input type="hidden" name="action" value="start">
-    <input type="submit" value="start game" data-testid="start-game-button">
-  </form>
-  {% endif %}
-</div>
+{% include "ws-lobby.html" %}
 {% endblock %}
