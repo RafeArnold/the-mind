@@ -321,6 +321,7 @@ class TestSupportTests {
           lives = Random.nextInt(1, 3),
           stars = Random.nextInt(0, 2),
           votingToThrowStar = Random.nextBoolean(),
+          playersVotingToThrowStar = mutableSetOf(),
         ),
     )
 }

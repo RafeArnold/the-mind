@@ -8,13 +8,20 @@ import com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat
 import org.http4k.server.Http4kServer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeAll
 import java.util.regex.Pattern
 import kotlin.test.Test
 
 class EndToEndTests {
 
   companion object {
-    private val playwright: Playwright = Playwright.create()
+    private lateinit var playwright: Playwright
+
+    @BeforeAll
+    @JvmStatic
+    fun startup() {
+      playwright = Playwright.create()
+    }
 
     @AfterAll
     @JvmStatic
@@ -128,6 +135,27 @@ class EndToEndTests {
     allPlayers[0].startGame()
 
     allPlayers.forEach { it.assertHasNLives(1) }
+  }
+
+  @Test
+  fun `can refresh in game`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+
+    val allPlayers = server.startNewGame(browser)
+
+    allPlayers.forEach { it.assertHasNLives(1) }
+
+    allPlayers.forEach { it.page.reload() }
+
+    allPlayers.forEach { it.assertHasNLives(1) }
+
+    val nextPlayer = allPlayers.nextPlayer()
+    nextPlayer.playCard(toCompleteRound = false)
+
+    allPlayers.first { it != allPlayers.nextPlayer() && it != nextPlayer }
+      .playCard(toCompleteRound = true)
+
+    allPlayers.forEach { it.assertHasLost() }
   }
 }
 
