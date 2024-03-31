@@ -19,9 +19,9 @@ class Tests {
     val host = server.createGame()
     val gameId = host.gameId
     assertEquals(InLobby, host.state)
-    val player2 = server.joinGame(gameId)
+    val player2 = server.joinGame(gameId = gameId)
     assertEquals(InLobby, player2.state)
-    val player3 = server.joinGame(gameId)
+    val player3 = server.joinGame(gameId = gameId)
     assertEquals(InLobby, player3.state)
     server.startGame(host)
     host.assertInGameWithOneCard()
@@ -53,8 +53,8 @@ class Tests {
       )
     val host = server.createGame()
     val gameId = host.gameId
-    val player2 = server.joinGame(gameId)
-    val player3 = server.joinGame(gameId)
+    val player2 = server.joinGame(gameId = gameId)
+    val player3 = server.joinGame(gameId = gameId)
     server.startGame(host)
     val players = mutableListOf(host, player2, player3)
     val firstPlayer = players.nextPlayer()
@@ -74,8 +74,8 @@ class Tests {
       )
     val host = server.createGame()
     val gameId = host.gameId
-    val player2 = server.joinGame(gameId)
-    val player3 = server.joinGame(gameId)
+    val player2 = server.joinGame(gameId = gameId)
+    val player3 = server.joinGame(gameId = gameId)
     server.startGame(host)
     val allPlayers = listOf(host, player2, player3)
     allPlayers.forEach { it.assertInGameWithNCards(1) }
@@ -101,8 +101,8 @@ class Tests {
       )
     val host = server.createGame()
     val gameId = host.gameId
-    val player2 = server.joinGame(gameId)
-    val player3 = server.joinGame(gameId)
+    val player2 = server.joinGame(gameId = gameId)
+    val player3 = server.joinGame(gameId = gameId)
     server.startGame(host)
     val allPlayers = mutableListOf(host, player2, player3)
     allPlayers.forEach { assertEquals(3, it.lives) }
@@ -139,8 +139,8 @@ class Tests {
       )
     val host = server.createGame()
     val gameId = host.gameId
-    val player2 = server.joinGame(gameId)
-    val player3 = server.joinGame(gameId)
+    val player2 = server.joinGame(gameId = gameId)
+    val player3 = server.joinGame(gameId = gameId)
     server.startGame(host)
 
     val allPlayers = mutableListOf(host, player2, player3)
@@ -207,8 +207,8 @@ class Tests {
       )
     val host = server.createGame()
     val gameId = host.gameId
-    val player2 = server.joinGame(gameId)
-    val player3 = server.joinGame(gameId)
+    val player2 = server.joinGame(gameId = gameId)
+    val player3 = server.joinGame(gameId = gameId)
     server.startGame(host)
 
     val allPlayers = mutableListOf(host, player2, player3)
@@ -312,6 +312,7 @@ class TestSupportTests {
 
   private fun createInGamePlayer(vararg cardValues: Int): Player =
     Player(
+      name = UUID.randomUUID().toString(),
       gameId = UUID.randomUUID().toString(),
       isHost = Random.nextBoolean(),
       state =

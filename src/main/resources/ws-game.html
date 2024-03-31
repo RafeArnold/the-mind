@@ -15,4 +15,15 @@
       {% endfor %}
     </ul>
   </div>
+  <div>
+    <form ws-send>
+      <input type="hidden" name="action" value="vote">
+      <button type="submit" data-testid="vote-to-throw-star-button">vote to throw star</button>
+    </form>
+    <ul data-testid="players-voting-to-throw-star">
+      {% for playerName in model.playersVotingToThrowStar %}
+      <li data-testid="player-name">{{ playerName }}</li>
+      {% endfor %}
+    </ul>
+  </div>
 </div>

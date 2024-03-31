@@ -51,6 +51,10 @@ import org.http4k.routing.ws.bind as wsBind
 
 val logger: Logger = LoggerFactory.getLogger("Main")
 
+fun main() {
+  startServer(GameConfig(12, 3, 1)).block()
+}
+
 fun startServer(
   gameConfig: GameConfig,
   port: Int = 8080,
@@ -108,13 +112,13 @@ class Index(view: BiDiBodyLens<ViewModel>, players: Map<String, Player>) : Routi
 
 class CreateGame(server: Server, players: MutableMap<String, Player>) : RoutingHttpHandler by
 "/create" bind POST to {
-  val player = server.createGame()
+  val player = server.createGame(playerName = it.form("playerName")!!)
   handleNewPlayer(player, players)
 }
 
 class JoinGame(server: Server, players: MutableMap<String, Player>) : RoutingHttpHandler by
 "/join" bind POST to {
-  val player = server.joinGame(it.form("gameId")!!)
+  val player = server.joinGame(playerName = it.form("playerName")!!, gameId = it.form("gameId")!!)
   handleNewPlayer(player, players)
 }
 
@@ -127,13 +131,13 @@ class Listen(
     logger.debug("WS request received")
     val player = request.player(players)!!
     WsResponse { ws: Websocket ->
-      player.onUpdate { ws.sendView(player, view) }
+      player.onUpdate { ws.sendView(player = player, playersVotingToThrowStar = it, view = view) }
       ws.onMessage {
         logger.debug("WS message received: ${it.bodyString()}")
         when (actionLens(it)) {
           Action.StartGame -> server.startGame(player)
           Action.PlayCard -> server.playCard(player)
-          Action.VoteToThrowStar -> TODO()
+          Action.VoteToThrowStar -> server.voteToThrowStar(player)
           Action.Heartbeat -> Unit // Do nothing.
         }
       }
@@ -143,13 +147,18 @@ class Listen(
 
 private fun Websocket.sendView(
   player: Player,
+  playersVotingToThrowStar: List<String>,
   view: BiDiWsMessageLens<ViewModel>,
 ) {
   val model: ViewModel =
     when (player.state) {
       is GameLost -> WsGameLostModel
       is GameWon -> WsGameWonModel
-      is InGame -> WsGameViewModel(cards = player.cards.map { card -> card.value }.sorted())
+      is InGame ->
+        WsGameViewModel(
+          cards = player.cards.map { card -> card.value }.sorted(),
+          playersVotingToThrowStar = playersVotingToThrowStar,
+        )
       is InLobby -> TODO()
     }
   send(view(model))
@@ -205,7 +214,10 @@ data class LobbyViewModel(val gameId: String, val isHost: Boolean) : ViewModel {
   override fun template(): String = "lobby"
 }
 
-data class WsGameViewModel(val cards: List<Int>) : ViewModel {
+data class WsGameViewModel(
+  val cards: List<Int>,
+  val playersVotingToThrowStar: List<String>,
+) : ViewModel {
   override fun template(): String = "ws-game"
 }
 
@@ -237,9 +249,12 @@ class PebbleTemplateRenderer(
 
 interface Server {
 
-  fun createGame(): Player
+  fun createGame(playerName: String = UUID.randomUUID().toString()): Player
 
-  fun joinGame(gameId: String): Player
+  fun joinGame(
+    playerName: String = UUID.randomUUID().toString(),
+    gameId: String,
+  ): Player
 
   fun startGame(player: Player)
 
@@ -249,15 +264,18 @@ interface Server {
 }
 
 data class Player(
+  val name: String,
   val gameId: String,
   val isHost: Boolean,
   var state: ClientState = InLobby,
 ) {
-  private val updateHandlers: MutableList<() -> Unit> = mutableListOf()
+  private val updateHandlers: MutableList<(playersVotingToThrowStar: List<String>) -> Unit> =
+    mutableListOf()
 
-  fun triggerUpdate() = updateHandlers.forEach { it() }
+  fun triggerUpdate(playersVotingToThrowStar: List<String>) =
+    updateHandlers.forEach { it(playersVotingToThrowStar) }
 
-  fun onUpdate(fn: () -> Unit) {
+  fun onUpdate(fn: (playersVotingToThrowStar: List<String>) -> Unit) {
     updateHandlers.add(fn)
   }
 }
@@ -285,17 +303,20 @@ class SimpleServer(private val gameConfig: GameConfig) : Server {
 
   private val games: MutableList<Game> = mutableListOf()
 
-  override fun createGame(): Player {
+  override fun createGame(playerName: String): Player {
     val gameId = UUID.randomUUID().toString()
-    val host = Player(gameId = gameId, isHost = true)
+    val host = Player(name = playerName, gameId = gameId, isHost = true)
     val game = Game(id = gameId, players = mutableListOf(host), currentRound = 1)
     games.add(game)
     return host
   }
 
-  override fun joinGame(gameId: String): Player {
+  override fun joinGame(
+    playerName: String,
+    gameId: String,
+  ): Player {
     val game = getGame(gameId = gameId)
-    val player = Player(gameId = gameId, isHost = false)
+    val player = Player(name = playerName, gameId = gameId, isHost = false)
     game.players.add(player)
     return player
   }
@@ -351,6 +372,7 @@ class SimpleServer(private val gameConfig: GameConfig) : Server {
       }
       game.handlePossibleRoundComplete()
     }
+    game.triggerUpdate()
   }
 
   private fun Game.handlePossibleRoundComplete() {
@@ -381,7 +403,9 @@ class SimpleServer(private val gameConfig: GameConfig) : Server {
   private fun shuffledDeck(): Iterator<Int> = (1..100).shuffled().iterator()
 
   private fun Game.triggerUpdate() {
-    players.forEach { it.triggerUpdate() }
+    val playersVotingToThrowStar =
+      players.filter { if (it.state is InGame) it.votingToThrowStar else false }.map { it.name }
+    players.forEach { it.triggerUpdate(playersVotingToThrowStar) }
   }
 }
 
