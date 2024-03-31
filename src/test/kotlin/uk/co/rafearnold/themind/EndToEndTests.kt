@@ -24,8 +24,7 @@ class EndToEndTests {
   }
 
   private val browser: Browser = playwright.chromium().launch()
-  private val server: Http4kServer =
-    startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+  private lateinit var server: Http4kServer
 
   @AfterEach
   fun tearEachDown() {
@@ -35,6 +34,7 @@ class EndToEndTests {
 
   @Test
   fun `complete full game`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
     val allPlayers = server.startNewGame(browser)
 
     allPlayers.forEach { it.assertHasNCards(1) }
@@ -52,7 +52,10 @@ class EndToEndTests {
 
   @Test
   fun `lose a game`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
     val allPlayers = server.startNewGame(browser)
+
+    allPlayers.forEach { it.assertHasNLives(1) }
 
     val incorrectNextPlayer = allPlayers.first { it != allPlayers.nextPlayer() }
     incorrectNextPlayer.playCard(toCompleteRound = true)
@@ -62,6 +65,7 @@ class EndToEndTests {
 
   @Test
   fun `throw a star`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 1))
     val allPlayers = server.startNewGame(browser)
 
     // Complete first round.
@@ -89,6 +93,24 @@ class EndToEndTests {
     // Lowest card of each player removed.
     allPlayers.forEach { it.assertHasCards(expectedCards[it.name]!!) }
   }
+
+  @Test
+  fun `lose a life when incorrect card is played`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 3, startingStarsCount = 0))
+    val allPlayers = server.startNewGame(browser)
+
+    allPlayers.forEach { it.assertHasNLives(3) }
+
+    // Complete first round.
+    repeat(2) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
+    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+
+    allPlayers.forEach { it.assertHasNLives(3) }
+
+    allPlayers.first { it != allPlayers.nextPlayer() }.playCard(toCompleteRound = false)
+
+    allPlayers.forEach { it.assertHasNLives(2) }
+  }
 }
 
 private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
@@ -100,6 +122,16 @@ private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
   players.drop(1).forEach { it.joinGame(gameId) }
   players[0].startGame()
   return players
+}
+
+private fun PlayerContext.assertHasNLives(n: Int) {
+  page.assertHasNLives(n = n)
+}
+
+private fun Page.assertHasNLives(n: Int) {
+  val livesDisplay = getByTestId("current-lives-count")
+  assertThat(livesDisplay).isVisible()
+  assertThat(livesDisplay).hasText(n.toString())
 }
 
 private fun PlayerContext.assertPlayersAreVoting(names: List<String>) {

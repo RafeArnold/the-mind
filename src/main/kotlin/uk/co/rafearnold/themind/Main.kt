@@ -156,6 +156,7 @@ private fun Websocket.sendView(
       is GameWon -> WsGameWonModel
       is InGame ->
         WsGameViewModel(
+          currentLivesCount = player.lives,
           cards = player.cards.map { card -> card.value }.sorted(),
           playersVotingToThrowStar = playersVotingToThrowStar,
         )
@@ -215,6 +216,7 @@ data class LobbyViewModel(val gameId: String, val isHost: Boolean) : ViewModel {
 }
 
 data class WsGameViewModel(
+  val currentLivesCount: Int,
   val cards: List<Int>,
   val playersVotingToThrowStar: List<String>,
 ) : ViewModel {
