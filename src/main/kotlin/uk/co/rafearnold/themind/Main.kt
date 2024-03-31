@@ -105,6 +105,7 @@ class Index(view: BiDiBodyLens<ViewModel>, players: Map<String, Player>) : Routi
         is InGame ->
           GameViewModel(
             currentLivesCount = player.lives,
+            currentThrowingStarsCount = player.stars,
             cards = player.cards.map { card -> card.value }.sorted(),
             playersVotingToThrowStar = player.playersVotingToThrowStar,
           )
@@ -167,6 +168,7 @@ private fun Websocket.sendView(
       is InGame ->
         WsGameViewModel(
           currentLivesCount = player.lives,
+          currentThrowingStarsCount = player.stars,
           cards = player.cards.map { card -> card.value }.sorted(),
           playersVotingToThrowStar = player.playersVotingToThrowStar,
         )
@@ -226,19 +228,28 @@ data class LobbyViewModel(val gameId: String, val isHost: Boolean) : ViewModel {
 }
 
 data class GameViewModel(
-  val currentLivesCount: Int,
-  val cards: List<Int>,
-  val playersVotingToThrowStar: Collection<String>,
-) : ViewModel {
+  override val currentLivesCount: Int,
+  override val currentThrowingStarsCount: Int,
+  override val cards: List<Int>,
+  override val playersVotingToThrowStar: Collection<String>,
+) : GameView, ViewModel {
   override fun template(): String = "game"
 }
 
 data class WsGameViewModel(
-  val currentLivesCount: Int,
-  val cards: List<Int>,
-  val playersVotingToThrowStar: Collection<String>,
-) : ViewModel {
+  override val currentLivesCount: Int,
+  override val currentThrowingStarsCount: Int,
+  override val cards: List<Int>,
+  override val playersVotingToThrowStar: Collection<String>,
+) : GameView, ViewModel {
   override fun template(): String = "ws-game"
+}
+
+interface GameView {
+  val currentLivesCount: Int
+  val currentThrowingStarsCount: Int
+  val cards: List<Int>
+  val playersVotingToThrowStar: Collection<String>
 }
 
 object WsGameWonModel : ViewModel {

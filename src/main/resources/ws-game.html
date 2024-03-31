@@ -19,12 +19,18 @@
   <div>
     <form ws-send>
       <input type="hidden" name="action" value="vote">
-      <button type="submit" data-testid="vote-to-throw-star-button">vote to throw star</button>
+      <button type="submit" data-testid="vote-to-throw-star-button"
+              {% if model.currentThrowingStarsCount == 0 %}disabled{% endif %}>
+        vote to throw star
+      </button>
     </form>
     <ul data-testid="players-voting-to-throw-star">
       {% for playerName in model.playersVotingToThrowStar %}
       <li data-testid="player-name">{{ playerName }}</li>
       {% endfor %}
     </ul>
+    <p>throwing stars:
+      <b data-testid="current-throwing-stars-count">{{model.currentThrowingStarsCount}}</b>
+    </p>
   </div>
 </div>

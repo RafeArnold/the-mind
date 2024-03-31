@@ -157,6 +157,21 @@ class EndToEndTests {
 
     allPlayers.forEach { it.assertHasLost() }
   }
+
+  @Test
+  fun `vote button is disabled when no throwing stars available`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 1))
+
+    val allPlayers = server.startNewGame(browser)
+
+    allPlayers.forEach { it.assertHasNThrowingStars(1) }
+    allPlayers.forEach { it.assertVoteButtonEnabled() }
+
+    allPlayers.forEach { it.voteToThrowStar() }
+
+    allPlayers.forEach { it.assertHasNThrowingStars(0) }
+    allPlayers.forEach { it.assertVoteButtonDisabled() }
+  }
 }
 
 private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
@@ -170,6 +185,36 @@ private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
 
 private fun Browser.createPlayerContexts(n: Int): List<PlayerContext> =
   playerNames.shuffled().take(n).map { PlayerContext(name = it, page = newContext().newPage()) }
+
+private fun PlayerContext.assertHasNThrowingStars(n: Int) {
+  page.assertHasNThrowingStars(n = n)
+}
+
+private fun Page.assertHasNThrowingStars(n: Int) {
+  val throwingStarsDisplay = getByTestId("current-throwing-stars-count")
+  assertThat(throwingStarsDisplay).isVisible()
+  assertThat(throwingStarsDisplay).hasText(n.toString())
+}
+
+private fun PlayerContext.assertVoteButtonEnabled() {
+  page.assertVoteButtonEnabled()
+}
+
+private fun Page.assertVoteButtonEnabled() {
+  val voteButton = voteToThrowStarButton()
+  assertThat(voteButton).isVisible()
+  assertThat(voteButton).isEnabled()
+}
+
+private fun PlayerContext.assertVoteButtonDisabled() {
+  page.assertVoteButtonDisabled()
+}
+
+private fun Page.assertVoteButtonDisabled() {
+  val voteButton = voteToThrowStarButton()
+  assertThat(voteButton).isVisible()
+  assertThat(voteButton).isDisabled()
+}
 
 private fun PlayerContext.assertHasNLives(n: Int) {
   page.assertHasNLives(n = n)
@@ -196,8 +241,10 @@ private fun PlayerContext.voteToThrowStar() {
 }
 
 private fun Page.voteToThrowStar() {
-  getByTestId("vote-to-throw-star-button").click()
+  voteToThrowStarButton().click()
 }
+
+private fun Page.voteToThrowStarButton(): Locator = getByTestId("vote-to-throw-star-button")
 
 private fun PlayerContext.assertHasLost() {
   page.assertHasLost()
