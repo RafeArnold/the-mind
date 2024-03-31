@@ -111,18 +111,37 @@ class EndToEndTests {
 
     allPlayers.forEach { it.assertHasNLives(2) }
   }
+
+  @Test
+  fun `can refresh in lobby`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+
+    val allPlayers = browser.createPlayerContexts(3)
+    allPlayers.forEach { it.navigateToHome(port = server.port()) }
+    val gameId: String = allPlayers[0].createGame()
+    allPlayers.drop(1).forEach { it.joinGame(gameId) }
+
+    allPlayers.forEach { it.page.reload() }
+
+    allPlayers.forEach { assertThat(it.page.gameIdDisplay()).hasText(gameId) }
+
+    allPlayers[0].startGame()
+
+    allPlayers.forEach { it.assertHasNLives(1) }
+  }
 }
 
 private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
-  val players: List<PlayerContext> =
-    playerNames.shuffled().take(3)
-      .map { PlayerContext(name = it, page = browser.newContext().newPage()) }
+  val players: List<PlayerContext> = browser.createPlayerContexts(3)
   players.forEach { it.navigateToHome(port = port()) }
   val gameId: String = players[0].createGame()
   players.drop(1).forEach { it.joinGame(gameId) }
   players[0].startGame()
   return players
 }
+
+private fun Browser.createPlayerContexts(n: Int): List<PlayerContext> =
+  playerNames.shuffled().take(n).map { PlayerContext(name = it, page = newContext().newPage()) }
 
 private fun PlayerContext.assertHasNLives(n: Int) {
   page.assertHasNLives(n = n)

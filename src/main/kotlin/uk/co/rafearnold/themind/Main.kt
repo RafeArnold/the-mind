@@ -130,8 +130,10 @@ class Listen(
   "/listen" wsBind { request ->
     logger.debug("WS request received")
     val player = request.player(players)!!
+    logger.debug("Player ${player.name} connected")
     WsResponse { ws: Websocket ->
-      player.onUpdate { ws.sendView(player = player, playersVotingToThrowStar = it, view = view) }
+      val listenerId =
+        player.listen { ws.sendView(player = player, playersVotingToThrowStar = it, view = view) }
       ws.onMessage {
         logger.debug("WS message received: ${it.bodyString()}")
         when (actionLens(it)) {
@@ -142,6 +144,10 @@ class Listen(
         }
       }
       ws.onError { logger.error("Error caught handling WS request", it) }
+      ws.onClose {
+        logger.debug("Player ${player.name} disconnected")
+        player.unlisten(listenerId = listenerId)
+      }
     }
   }
 
@@ -271,14 +277,20 @@ data class Player(
   val isHost: Boolean,
   var state: ClientState = InLobby,
 ) {
-  private val updateHandlers: MutableList<(playersVotingToThrowStar: List<String>) -> Unit> =
-    mutableListOf()
+  private val updateHandlers: MutableMap<String, (playersVotingToThrowStar: List<String>) -> Unit> =
+    mutableMapOf()
 
   fun triggerUpdate(playersVotingToThrowStar: List<String>) =
-    updateHandlers.forEach { it(playersVotingToThrowStar) }
+    updateHandlers.values.forEach { it(playersVotingToThrowStar) }
 
-  fun onUpdate(fn: (playersVotingToThrowStar: List<String>) -> Unit) {
-    updateHandlers.add(fn)
+  fun listen(fn: (playersVotingToThrowStar: List<String>) -> Unit): String {
+    val listenerId = UUID.randomUUID().toString()
+    updateHandlers[listenerId] = fn
+    return listenerId
+  }
+
+  fun unlisten(listenerId: String) {
+    updateHandlers.remove(listenerId)
   }
 }
 
