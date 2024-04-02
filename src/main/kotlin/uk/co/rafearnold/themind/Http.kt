@@ -205,6 +205,6 @@ private fun handleNewPlayer(player: GameConnection): Response {
 private fun redirectHome(): Response = Response(SEE_OTHER).with(Header.LOCATION.of(Uri.of("/")))
 
 private fun Server.connect(request: Request): GameConnection? =
-  request.cookie(PLAYER_ID_COOKIE)?.value?.let { connect(playerId = it) }
+  request.cookie(PLAYER_ID_COOKIE)?.value?.let { getConnection(playerId = it) }
 
 private const val PLAYER_ID_COOKIE: String = "themind_playerid"

@@ -22,7 +22,7 @@ interface Server {
     playerName: String,
   ): GameConnection
 
-  fun connect(playerId: String): GameConnection
+  fun getConnection(playerId: String): GameConnection?
 
   fun startGame(playerId: String)
 

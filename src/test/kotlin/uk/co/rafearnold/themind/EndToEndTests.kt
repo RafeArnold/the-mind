@@ -5,12 +5,15 @@ import com.microsoft.playwright.Locator
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.Playwright
 import com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat
+import com.microsoft.playwright.options.Cookie
 import org.http4k.server.Http4kServer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
+import java.util.UUID
 import java.util.regex.Pattern
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class EndToEndTests {
 
@@ -198,6 +201,35 @@ class EndToEndTests {
     val allPlayers = server.startNewGame(browser)
 
     allPlayers.forEach { it.assertPlayersAre(allPlayers.map { p -> p.name }) }
+  }
+
+  @Test
+  fun `connecting as unidentified player goes to home`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+
+    val cookieName = "themind_playerid"
+
+    // Check that we have the correct cookie name.
+    val controlContext = browser.newContext()
+    val controlPlayer = controlContext.newPage()
+    controlPlayer.navigateToHome(port = server.port())
+    val gameId = controlPlayer.createGame(name = "control")
+    assertEquals(1, controlContext.cookies().size)
+    val controlCookie = controlContext.cookies()[0]
+    assertEquals(cookieName, controlCookie.name)
+
+    // Connect as an unidentified player.
+    val playerContext = browser.newContext()
+    val playerCookie =
+      Cookie(cookieName, UUID.randomUUID().toString())
+        .setDomain(controlCookie.domain)
+        .setPath(controlCookie.path)
+    playerContext.addCookies(listOf(playerCookie))
+    val playerPage = playerContext.newPage()
+    playerPage.navigateToHome(port = server.port())
+
+    assertThat(playerPage.createGameButton()).isVisible()
+    playerPage.joinGame(gameId = gameId, name = "test")
   }
 }
 

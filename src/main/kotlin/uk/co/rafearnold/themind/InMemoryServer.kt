@@ -43,13 +43,11 @@ class InMemoryServer(private val gameConfig: GameConfig) : Server {
     return player
   }
 
-  override fun connect(playerId: String): GameConnection {
-    val (_, connection) = getGame(playerId = playerId)
-    return connection
-  }
+  override fun getConnection(playerId: String): GameConnection? =
+    getGame(playerId = playerId)?.let { (_, connection) -> connection }
 
   override fun startGame(playerId: String) {
-    val (game, _) = getGame(playerId = playerId)
+    val (game, _) = getGame(playerId = playerId)!!
     val deck = shuffledDeck()
     for (player in game.connections) {
       player.state =
@@ -67,7 +65,7 @@ class InMemoryServer(private val gameConfig: GameConfig) : Server {
   }
 
   override fun playCard(playerId: String) {
-    val (game, connection) = getGame(playerId = playerId)
+    val (game, connection) = getGame(playerId = playerId)!!
     val cards = connection.cards
     val removedCard = cards.minByOrNull { it.value }!!
     cards.remove(removedCard)
@@ -95,7 +93,7 @@ class InMemoryServer(private val gameConfig: GameConfig) : Server {
   }
 
   override fun voteToThrowStar(playerId: String) {
-    val (game, connection) = getGame(playerId = playerId)
+    val (game, connection) = getGame(playerId = playerId)!!
     connection.votingToThrowStar = true
     if (game.connections.all { it.votingToThrowStar }) {
       for (player in game.connections) {
@@ -136,14 +134,14 @@ class InMemoryServer(private val gameConfig: GameConfig) : Server {
     }
   }
 
-  private fun getGame(playerId: String): Pair<InternalGame, GameConnection> {
+  private fun getGame(playerId: String): Pair<InternalGame, GameConnection>? {
     for (game in games) {
       val player = game.connections.firstOrNull { it.playerId == playerId }
       if (player != null) {
         return game to player
       }
     }
-    throw NoSuchElementException("Player with id $playerId doesn't exist")
+    return null
   }
 
   private fun get(gameId: String): InternalGame = games.first { it.id == gameId }
