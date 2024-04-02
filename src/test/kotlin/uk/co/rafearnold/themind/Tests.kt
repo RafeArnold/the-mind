@@ -245,6 +245,56 @@ class Tests {
     allPlayers.forEach { assertEquals(1, it.stars) }
     allPlayers.forEach { it.assertInGameWithNCards(2) }
   }
+
+  @Test
+  fun `leave lobby`() {
+    val server =
+      InMemoryServer(
+        gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 1),
+      )
+    val host = server.createGame()
+    val gameId = host.gameId
+    val player2 = server.joinGame(gameId = gameId)
+    val player3 = server.joinGame(gameId = gameId)
+
+    assertEquals(
+      listOf(host.player.name, player2.player.name, player3.player.name),
+      host.lobbyState.allPlayers,
+    )
+
+    server.leave(player3)
+    assertEquals(listOf(host.player.name, player2.player.name), host.lobbyState.allPlayers)
+
+    server.startGame(host)
+
+    server.playCard(listOf(host, player2).nextPlayer())
+    server.playCard(listOf(host, player2).nextPlayer())
+    assertEquals(GameWon, host.state)
+    assertEquals(GameWon, player2.state)
+  }
+
+  @Test
+  fun `leave game`() {
+    val server =
+      InMemoryServer(
+        gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 1),
+      )
+    val host = server.createGame()
+    val gameId = host.gameId
+    val player2 = server.joinGame(gameId = gameId)
+    val player3 = server.joinGame(gameId = gameId)
+    server.startGame(host)
+
+    assertEquals(
+      listOf(host.player.name, player2.player.name, player3.player.name),
+      host.inGameState.allPlayers,
+    )
+
+    server.leave(player3)
+
+    assertEquals(PlayerLeft(playerName = player3.player.name), host.state)
+    assertEquals(PlayerLeft(playerName = player3.player.name), player2.state)
+  }
 }
 
 private fun Server.createGame(): GameConnection =
@@ -259,6 +309,8 @@ private fun Server.playCard(connection: GameConnection) = playCard(playerId = co
 
 private fun Server.voteToThrowStar(connection: GameConnection) =
   voteToThrowStar(playerId = connection.playerId)
+
+private fun Server.leave(connection: GameConnection) = leave(playerId = connection.playerId)
 
 private fun List<GameConnection>.nextPlayer(): GameConnection = minByOrNull { it.minCardValue() }!!
 
@@ -289,6 +341,10 @@ private fun List<GameConnection>.assertNoDuplicateCards() {
   val allCards = flatMap { it.cards.map { card -> card.value } }
   assertEquals(allCards, allCards.distinct())
 }
+
+private val GameConnection.lobbyState: InLobby get() = state as InLobby
+
+private val GameConnection.inGameState: InGame get() = state as InGame
 
 private var GameConnection.cards: MutableList<Card>
   get() = (state as InGame).cards

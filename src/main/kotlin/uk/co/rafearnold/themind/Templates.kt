@@ -5,7 +5,6 @@ import io.pebbletemplates.pebble.error.LoaderException
 import io.pebbletemplates.pebble.loader.FileLoader
 import org.http4k.template.TemplateRenderer
 import org.http4k.template.ViewModel
-import org.http4k.template.ViewNotFound
 import java.io.StringWriter
 
 object HomeViewModel : ViewModel {
@@ -55,6 +54,8 @@ data class WsGameViewModel(
 }
 
 interface GameView {
+  @Suppress("unused")
+  val isInGame: Boolean get() = true
   val currentLivesCount: Int
   val currentThrowingStarsCount: Int
   val allPlayers: List<String>
@@ -78,6 +79,22 @@ object WsGameLostViewModel : ViewModel {
   override fun template(): String = "ws-lost"
 }
 
+data class PlayerLeftViewModel(
+  override val playerThatLeftName: String,
+) : PlayerLeftView, ViewModel {
+  override fun template(): String = "player-left"
+}
+
+data class WsPlayerLeftViewModel(
+  override val playerThatLeftName: String,
+) : PlayerLeftView, ViewModel {
+  override fun template(): String = "ws-player-left"
+}
+
+interface PlayerLeftView {
+  val playerThatLeftName: String
+}
+
 class PebbleTemplateRenderer(
   private val engine: PebbleEngine =
     PebbleEngine.Builder()
@@ -92,6 +109,6 @@ class PebbleTemplateRenderer(
         .evaluate(writer, mapOf("model" to viewModel))
       writer.toString()
     } catch (e: LoaderException) {
-      throw ViewNotFound(viewModel)
+      throw RuntimeException("Template ${viewModel.template()} not found", e)
     }
 }

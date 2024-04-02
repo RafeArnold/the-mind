@@ -1,5 +1,6 @@
 <div id="connection-window">
   <p>lives: <b data-testid="current-lives-count">{{model.currentLivesCount}}</b></p>
+  {% include "leave-button.html" %}
   {% include "all-players.html" %}
   <div data-testid="card-list">
     <ul>

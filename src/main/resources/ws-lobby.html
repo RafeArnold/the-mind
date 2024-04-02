@@ -1,5 +1,6 @@
 <div id="connection-window">
   game id: <b data-testid="game-id">{{model.gameId}}</b>
+  {% include "leave-button.html" %}
   {% include "all-players.html" %}
   {% if model.isHost %}
   <form ws-send>

@@ -10,10 +10,13 @@ import org.http4k.server.Http4kServer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
-import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 class EndToEndTests {
 
@@ -247,8 +250,9 @@ class EndToEndTests {
 
     // Connect as an unidentified player.
     val playerContext = browser.newContext()
+    val invalidCookieValue = "invalid player id"
     val playerCookie =
-      Cookie(cookieName, UUID.randomUUID().toString())
+      Cookie(cookieName, invalidCookieValue)
         .setDomain(controlCookie.domain)
         .setPath(controlCookie.path)
     playerContext.addCookies(listOf(playerCookie))
@@ -257,6 +261,133 @@ class EndToEndTests {
 
     assertThat(playerPage.createGameButton()).isVisible()
     playerPage.joinGame(gameId = gameId, name = "test")
+
+    assertEquals(1, playerContext.cookies().size)
+    assertEquals(cookieName, playerContext.cookies()[0].name)
+    assertNotEquals(invalidCookieValue, playerContext.cookies()[0].value)
+  }
+
+  @Test
+  fun `can leave lobby`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+
+    val allPlayers: List<PlayerContext> = browser.createPlayerContexts(3)
+    allPlayers.forEach { it.navigateToHome(port = server.port()) }
+    val gameId: String = allPlayers[0].createGame()
+    allPlayers.drop(1).forEach { it.joinGame(gameId) }
+
+    allPlayers.forEach {
+      it.assertPlayersAre(allPlayers.map { p -> p.name })
+      assertThat(it.page.leaveButton()).isVisible()
+      assertThat(it.page.gameIdDisplay()).isVisible()
+    }
+
+    allPlayers[2].leaveGame(confirm = false)
+    allPlayers.take(2).forEach { it.assertPlayersAre(allPlayers.take(2).map { p -> p.name }) }
+
+    allPlayers[1].leaveGame(confirm = false)
+    allPlayers.take(1).forEach { it.assertPlayersAre(allPlayers.take(1).map { p -> p.name }) }
+
+    allPlayers[0].leaveGame(confirm = false)
+
+    allPlayers.forEach { assertThat(it.page.gameIdDisplay()).not().isAttached() }
+  }
+
+  @Test
+  fun `new host is assigned when host leaves lobby`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+
+    val allPlayers: List<PlayerContext> = browser.createPlayerContexts(3)
+    allPlayers.forEach { it.navigateToHome(port = server.port()) }
+    val gameId: String = allPlayers[0].createGame()
+    allPlayers.drop(1).forEach { it.joinGame(gameId) }
+
+    allPlayers.forEach { it.assertPlayersAre(allPlayers.map { p -> p.name }) }
+    assertThat(allPlayers[0].page.startGameButton()).isVisible()
+    allPlayers.drop(1).forEach { assertThat(it.page.startGameButton()).not().isAttached() }
+
+    allPlayers[0].leaveGame(confirm = false)
+
+    val newAllPlayers = allPlayers.drop(1)
+    newAllPlayers.forEach { it.assertPlayersAre(newAllPlayers.map { p -> p.name }) }
+    assertThat(newAllPlayers[0].page.startGameButton()).isVisible()
+    newAllPlayers.drop(1).forEach { assertThat(it.page.startGameButton()).not().isAttached() }
+  }
+
+  @Test
+  fun `last player can leave lobby`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+
+    val allPlayers: List<PlayerContext> = browser.createPlayerContexts(3)
+    allPlayers.forEach { it.navigateToHome(port = server.port()) }
+    val gameId: String = allPlayers[0].createGame()
+    allPlayers.drop(1).forEach { it.joinGame(gameId) }
+
+    allPlayers[0].leaveGame(confirm = false)
+    allPlayers[2].leaveGame(confirm = false)
+    allPlayers[1].leaveGame(confirm = false)
+  }
+
+  @Test
+  fun `can leave game which ends game for all`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+
+    val allPlayers = server.startNewGame(browser)
+
+    allPlayers.forEach {
+      it.assertPlayersAre(allPlayers.map { p -> p.name })
+      assertThat(it.page.leaveButton()).isVisible()
+      assertThat(it.page.currentLivesCountDisplay()).isVisible()
+    }
+
+    allPlayers[2].leaveGame(confirm = true)
+
+    assertThat(allPlayers[2].page.createGameButton()).isVisible()
+    allPlayers.forEach { assertThat(it.page.currentLivesCountDisplay()).not().isAttached() }
+
+    allPlayers.take(2).forEach {
+      it.assertPlayerHasLeft(playerName = allPlayers[2].name)
+      assertThat(it.page.playerLeftText()).isVisible()
+      assertThat(it.page.leaveButton()).isVisible()
+      it.leaveGame(confirm = false)
+      assertThat(it.page.createGameButton()).isVisible()
+      assertThat(it.page.playerLeftText()).not().isAttached()
+    }
+  }
+
+  @Test
+  fun `can leave after game won`() {
+    server = startServer(GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0))
+
+    val allPlayers = server.startNewGame(browser)
+
+    repeat(2) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
+    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+
+    allPlayers.forEach {
+      it.assertHasWon()
+      assertThat(it.page.winnerText()).isVisible()
+      assertThat(it.page.leaveButton()).isVisible()
+      it.leaveGame(confirm = false)
+      assertThat(it.page.winnerText()).not().isAttached()
+    }
+  }
+
+  @Test
+  fun `can leave after game lost`() {
+    server = startServer(GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0))
+
+    val allPlayers = server.startNewGame(browser)
+
+    allPlayers.first { it != allPlayers.nextPlayer() }.playCard(toCompleteRound = false)
+
+    allPlayers.forEach {
+      it.assertHasLost()
+      assertThat(it.page.loserText()).isVisible()
+      assertThat(it.page.leaveButton()).isVisible()
+      it.leaveGame(confirm = false)
+      assertThat(it.page.loserText()).not().isAttached()
+    }
   }
 }
 
@@ -271,6 +402,14 @@ private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
 
 private fun Browser.createPlayerContexts(n: Int): List<PlayerContext> =
   playerNames.shuffled().take(n).map { PlayerContext(name = it, page = newContext().newPage()) }
+
+private fun PlayerContext.assertPlayerHasLeft(playerName: String) {
+  page.assertPlayerHasLeft(playerName = playerName)
+}
+
+private fun Page.assertPlayerHasLeft(playerName: String) {
+  assertThat(playerLeftText()).hasText("$playerName left")
+}
 
 private fun PlayerContext.assertPlayersAre(names: List<String>) {
   page.assertPlayersAre(names = names)
@@ -317,7 +456,7 @@ private fun PlayerContext.assertHasNLives(n: Int) {
 }
 
 private fun Page.assertHasNLives(n: Int) {
-  val livesDisplay = getByTestId("current-lives-count")
+  val livesDisplay = currentLivesCountDisplay()
   assertThat(livesDisplay).isVisible()
   assertThat(livesDisplay).hasText(n.toString())
 }
@@ -347,7 +486,7 @@ private fun PlayerContext.assertHasLost() {
 }
 
 private fun Page.assertHasLost() {
-  assertThat(getByTestId("loser-text")).isVisible()
+  assertThat(loserText()).isVisible()
 }
 
 private fun PlayerContext.assertHasWon() {
@@ -355,7 +494,7 @@ private fun PlayerContext.assertHasWon() {
 }
 
 private fun Page.assertHasWon() {
-  assertThat(getByTestId("winner-text")).isVisible()
+  assertThat(winnerText()).isVisible()
 }
 
 private fun PlayerContext.playCard(toCompleteRound: Boolean) {
@@ -412,7 +551,7 @@ private fun PlayerContext.startGame() {
 }
 
 private fun Page.startGame() {
-  val startGameButton = getByTestId("start-game-button")
+  val startGameButton = startGameButton()
   startGameButton.click()
   assertThat(startGameButton).not().isAttached()
 }
@@ -451,11 +590,40 @@ private fun Page.joinGame(
   assertThat(gameIdDisplay).hasText(gameId)
 }
 
+private fun PlayerContext.leaveGame(confirm: Boolean) {
+  page.leaveGame(confirm = confirm)
+}
+
+private fun Page.leaveGame(confirm: Boolean) {
+  val latch = CountDownLatch(1)
+  if (confirm) {
+    onceDialog { dialog ->
+      dialog.accept()
+      latch.countDown()
+    }
+  }
+  leaveButton().click()
+  if (confirm) assertTrue(latch.await(5, TimeUnit.SECONDS))
+  assertThat(createGameButton()).isVisible()
+}
+
 private fun Page.gameIdDisplay(): Locator = getByTestId("game-id")
+
+private fun Page.currentLivesCountDisplay(): Locator? = getByTestId("current-lives-count")
 
 private fun Page.createGameButton(): Locator = getByTestId("create-game-button")
 
 private fun Page.joinGameButton(): Locator = getByTestId("join-game-button")
+
+private fun Page.startGameButton(): Locator = getByTestId("start-game-button")
+
+private fun Page.winnerText(): Locator? = getByTestId("winner-text")
+
+private fun Page.loserText(): Locator? = getByTestId("loser-text")
+
+private fun Page.leaveButton(): Locator = getByTestId("leave-button")
+
+private fun Page.playerLeftText(): Locator? = getByTestId("player-left-text")
 
 private fun Page.fillPlayerNameInput(name: String) {
   getByTestId("player-name-input").fill(name)

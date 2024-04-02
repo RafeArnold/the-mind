@@ -29,6 +29,8 @@ interface Server {
   fun playCard(playerId: String)
 
   fun voteToThrowStar(playerId: String)
+
+  fun leave(playerId: String)
 }
 
 data class GameConnection(
@@ -57,7 +59,7 @@ data class GameConnection(
   fun triggerUpdate() = listeners.values.forEach { it() }
 }
 
-data class Player(val name: String, val isHost: Boolean)
+data class Player(val name: String, var isHost: Boolean)
 
 sealed interface GameState
 
@@ -78,6 +80,8 @@ data class InGame(
 data object GameWon : GameState
 
 data object GameLost : GameState
+
+data class PlayerLeft(val playerName: String) : GameState
 
 data class Card(val value: Int)
 

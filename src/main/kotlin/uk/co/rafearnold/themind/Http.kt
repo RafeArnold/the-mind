@@ -54,6 +54,7 @@ fun startServer(
       Index(view, gameServer),
       CreateGame(gameServer),
       JoinGame(gameServer),
+      LeaveGame(gameServer),
     )
   val app =
     PolyHandler(
@@ -103,6 +104,7 @@ class Index(
             )
           is GameLost -> GameLostViewModel
           is GameWon -> GameWonViewModel
+          is PlayerLeft -> PlayerLeftViewModel(playerThatLeftName = state.playerName)
         }
       }
     Response(OK).with(view of viewModel)
@@ -116,6 +118,11 @@ class CreateGame(server: Server) : RoutingHttpHandler by "/create" bind POST to 
 class JoinGame(server: Server) : RoutingHttpHandler by "/join" bind POST to {
   val player = server.joinGame(gameId = it.form("gameId")!!, playerName = it.form("playerName")!!)
   handleNewPlayer(player)
+}
+
+class LeaveGame(server: Server) : RoutingHttpHandler by "/leave" bind POST to {
+  server.leave(playerId = it.playerId!!)
+  redirectHome()
 }
 
 class Listen(
@@ -168,6 +175,7 @@ private fun Websocket.sendView(
           isHost = connection.player.isHost,
           allPlayers = state.allPlayers,
         )
+      is PlayerLeft -> WsPlayerLeftViewModel(playerThatLeftName = state.playerName)
     }
   send(view(model))
 }
@@ -205,6 +213,8 @@ private fun handleNewPlayer(player: GameConnection): Response {
 private fun redirectHome(): Response = Response(SEE_OTHER).with(Header.LOCATION.of(Uri.of("/")))
 
 private fun Server.connect(request: Request): GameConnection? =
-  request.cookie(PLAYER_ID_COOKIE)?.value?.let { getConnection(playerId = it) }
+  request.playerId?.let { getConnection(playerId = it) }
+
+private val Request.playerId: String? get() = cookie(PLAYER_ID_COOKIE)?.value
 
 private const val PLAYER_ID_COOKIE: String = "themind_playerid"

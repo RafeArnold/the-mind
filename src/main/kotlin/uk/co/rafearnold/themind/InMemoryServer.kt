@@ -111,6 +111,28 @@ class InMemoryServer(private val gameConfig: GameConfig) : Server {
     game.triggerUpdate()
   }
 
+  override fun leave(playerId: String) {
+    val (game, connection) = getGame(playerId = playerId)!!
+    game.connections.remove(connection)
+    if (connection.player.isHost) {
+      if (game.connections.isNotEmpty()) {
+        game.connections[0].player.isHost = true
+      } else {
+        games.remove(game)
+      }
+    }
+    for (player in game.connections) {
+      when (val state = player.state) {
+        is GameLost -> Unit // Do nothing.
+        is GameWon -> Unit // Do nothing.
+        is InGame -> player.state = PlayerLeft(playerName = connection.player.name)
+        is InLobby -> state.allPlayers.remove(connection.player.name)
+        is PlayerLeft -> Unit // Do nothing.
+      }
+    }
+    game.triggerUpdate()
+  }
+
   private fun InternalGame.handlePossibleRoundComplete() {
     if (connections.all { it.cards.isEmpty() }) {
       // Round complete.
