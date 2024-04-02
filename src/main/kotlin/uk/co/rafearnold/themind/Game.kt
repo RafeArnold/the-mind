@@ -90,36 +90,3 @@ sealed interface Action {
 
   data object VoteToThrowStar : Action
 }
-
-var GameConnection.currentRound: Int
-  get() = (state as InGame).currentRound
-  set(value) {
-    (state as InGame).currentRound = value
-  }
-
-var GameConnection.cards: MutableList<Card>
-  get() = (state as InGame).cards
-  set(value) {
-    (state as InGame).cards = value
-  }
-
-var GameConnection.lives: Int
-  get() = (state as InGame).lives
-  set(value) {
-    (state as InGame).lives = value
-  }
-
-var GameConnection.stars: Int
-  get() = (state as InGame).stars
-  set(value) {
-    (state as InGame).stars = value
-  }
-
-var GameConnection.votingToThrowStar: Boolean
-  get() = (state as InGame).votingToThrowStar
-  set(value) {
-    (state as InGame).votingToThrowStar = value
-  }
-
-val GameConnection.playersVotingToThrowStar: MutableSet<String>
-  get() = (state as InGame).playersVotingToThrowStar
