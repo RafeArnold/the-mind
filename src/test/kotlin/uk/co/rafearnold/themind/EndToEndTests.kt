@@ -162,6 +162,33 @@ class EndToEndTests {
   }
 
   @Test
+  fun `can refresh after game won`() {
+    server = startServer(GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0))
+
+    val allPlayers = server.startNewGame(browser)
+    repeat(2) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
+    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    allPlayers.forEach { it.assertHasWon() }
+
+    allPlayers.forEach { it.page.reload() }
+
+    allPlayers.forEach { it.assertHasWon() }
+  }
+
+  @Test
+  fun `can refresh after game lost`() {
+    server = startServer(GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0))
+
+    val allPlayers = server.startNewGame(browser)
+    allPlayers.first { it != allPlayers.nextPlayer() }.playCard(toCompleteRound = true)
+    allPlayers.forEach { it.assertHasLost() }
+
+    allPlayers.forEach { it.page.reload() }
+
+    allPlayers.forEach { it.assertHasLost() }
+  }
+
+  @Test
   fun `vote button is disabled when no throwing stars available`() {
     server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 1))
 

@@ -62,11 +62,19 @@ interface GameView {
   val playersVotingToThrowStar: Collection<String>
 }
 
-object WsGameWonModel : ViewModel {
+object GameWonViewModel : ViewModel {
+  override fun template(): String = "won"
+}
+
+object WsGameWonViewModel : ViewModel {
   override fun template(): String = "ws-won"
 }
 
-object WsGameLostModel : ViewModel {
+object GameLostViewModel : ViewModel {
+  override fun template(): String = "lost"
+}
+
+object WsGameLostViewModel : ViewModel {
   override fun template(): String = "ws-lost"
 }
 

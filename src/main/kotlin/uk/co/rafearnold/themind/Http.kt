@@ -101,8 +101,8 @@ class Index(
               cards = state.cards.map { card -> card.value }.sorted(),
               playersVotingToThrowStar = state.playersVotingToThrowStar,
             )
-          is GameLost -> TODO()
-          is GameWon -> TODO()
+          is GameLost -> GameLostViewModel
+          is GameWon -> GameWonViewModel
         }
       }
     Response(OK).with(view of viewModel)
@@ -152,8 +152,8 @@ private fun Websocket.sendView(
 ) {
   val model: ViewModel =
     when (val state = connection.state) {
-      is GameLost -> WsGameLostModel
-      is GameWon -> WsGameWonModel
+      is GameLost -> WsGameLostViewModel
+      is GameWon -> WsGameWonViewModel
       is InGame ->
         WsGameViewModel(
           currentLivesCount = state.lives,
