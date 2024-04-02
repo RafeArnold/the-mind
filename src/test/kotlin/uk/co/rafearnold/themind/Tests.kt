@@ -13,17 +13,23 @@ class Tests {
   @Test
   fun `all cards played in correct order`() {
     val server =
-      SimpleServer(
+      InMemoryServer(
         gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
       )
     val host = server.createGame()
     val gameId = host.gameId
-    assertEquals(InLobby(allPlayers = mutableListOf(host.name)), host.state)
+    assertEquals(InLobby(allPlayers = mutableListOf(host.player.name)), host.state)
     val player2 = server.joinGame(gameId = gameId)
-    assertEquals(InLobby(allPlayers = mutableListOf(host.name, player2.name)), host.state)
-    assertEquals(InLobby(allPlayers = mutableListOf(host.name, player2.name)), player2.state)
+    assertEquals(
+      InLobby(allPlayers = mutableListOf(host.player.name, player2.player.name)),
+      host.state,
+    )
+    assertEquals(
+      InLobby(allPlayers = mutableListOf(host.player.name, player2.player.name)),
+      player2.state,
+    )
     val player3 = server.joinGame(gameId = gameId)
-    val allPlayerNames = mutableListOf(host.name, player2.name, player3.name)
+    val allPlayerNames = mutableListOf(host.player.name, player2.player.name, player3.player.name)
     assertEquals(InLobby(allPlayers = allPlayerNames), host.state)
     assertEquals(InLobby(allPlayers = allPlayerNames), player2.state)
     assertEquals(InLobby(allPlayers = allPlayerNames), player3.state)
@@ -52,7 +58,7 @@ class Tests {
   @Test
   fun `card played in wrong order`() {
     val server =
-      SimpleServer(
+      InMemoryServer(
         gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
       )
     val host = server.createGame()
@@ -73,7 +79,7 @@ class Tests {
   @Test
   fun `all cards played in correct order with multiple rounds`() {
     val server =
-      SimpleServer(
+      InMemoryServer(
         gameConfig = GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0),
       )
     val host = server.createGame()
@@ -100,7 +106,7 @@ class Tests {
   @Test
   fun `cards played in wrong order with multiple rounds and multiple lives`() {
     val server =
-      SimpleServer(
+      InMemoryServer(
         gameConfig = GameConfig(roundCount = 3, startingLivesCount = 3, startingStarsCount = 0),
       )
     val host = server.createGame()
@@ -138,7 +144,7 @@ class Tests {
   @Test
   fun `star thrown`() {
     val server =
-      SimpleServer(
+      InMemoryServer(
         gameConfig = GameConfig(roundCount = 2, startingLivesCount = 1, startingStarsCount = 2),
       )
     val host = server.createGame()
@@ -206,7 +212,7 @@ class Tests {
   @Test
   fun `playing a card resets votes to throw star`() {
     val server =
-      SimpleServer(
+      InMemoryServer(
         gameConfig = GameConfig(roundCount = 2, startingLivesCount = 1, startingStarsCount = 1),
       )
     val host = server.createGame()
@@ -241,21 +247,35 @@ class Tests {
   }
 }
 
-private fun List<Player>.nextPlayer(): Player = minByOrNull { it.minCardValue() }!!
+private fun Server.createGame(): GameConnection =
+  createGame(playerName = UUID.randomUUID().toString())
 
-private fun MutableList<Player>.sortByMinCardValue() = sortBy { it.minCardValue() }
+private fun Server.joinGame(gameId: String): GameConnection =
+  joinGame(gameId = gameId, playerName = UUID.randomUUID().toString())
 
-private fun Player.minCardValue(): Int = cards.minOfOrNull { card -> card.value } ?: Int.MAX_VALUE
+private fun Server.startGame(connection: GameConnection) = startGame(playerId = connection.playerId)
 
-private fun Player.assertInGameWithOneCard() {
+private fun Server.playCard(connection: GameConnection) = playCard(playerId = connection.playerId)
+
+private fun Server.voteToThrowStar(connection: GameConnection) =
+  voteToThrowStar(playerId = connection.playerId)
+
+private fun List<GameConnection>.nextPlayer(): GameConnection = minByOrNull { it.minCardValue() }!!
+
+private fun MutableList<GameConnection>.sortByMinCardValue() = sortBy { it.minCardValue() }
+
+private fun GameConnection.minCardValue(): Int =
+  cards.minOfOrNull { card -> card.value } ?: Int.MAX_VALUE
+
+private fun GameConnection.assertInGameWithOneCard() {
   this.assertInGameWithNCards(1)
 }
 
-private fun Player.assertInGameWithNoCards() {
+private fun GameConnection.assertInGameWithNoCards() {
   this.assertInGameWithNCards(0)
 }
 
-private fun Player.assertInGameWithNCards(n: Int) {
+private fun GameConnection.assertInGameWithNCards(n: Int) {
   assertIs<InGame>(state)
   assertEquals(n, cards.size)
   for (i in 0 until n) {
@@ -265,24 +285,24 @@ private fun Player.assertInGameWithNCards(n: Int) {
   }
 }
 
-private fun List<Player>.assertNoDuplicateCards() {
+private fun List<GameConnection>.assertNoDuplicateCards() {
   val allCards = flatMap { it.cards.map { card -> card.value } }
   assertEquals(allCards, allCards.distinct())
 }
 
-private var Player.cards: MutableList<Card>
+private var GameConnection.cards: MutableList<Card>
   get() = (state as InGame).cards
   set(cards) {
     (state as InGame).cards = cards
   }
 
-private val Player.lives: Int
+private val GameConnection.lives: Int
   get() = (state as InGame).lives
 
-private val Player.stars: Int
+private val GameConnection.stars: Int
   get() = (state as InGame).stars
 
-private val Player.votingToThrowStar: Boolean
+private val GameConnection.votingToThrowStar: Boolean
   get() = (state as InGame).votingToThrowStar
 
 class TestSupportTests {
@@ -308,19 +328,23 @@ class TestSupportTests {
     players.assertNextPlayerEqualsAndRemoveCard(player3)
   }
 
-  private fun MutableList<Player>.assertNextPlayerEqualsAndRemoveCard(expected: Player) {
+  private fun MutableList<GameConnection>.assertNextPlayerEqualsAndRemoveCard(
+    expected: GameConnection,
+  ) {
     val nextPlayer = nextPlayer()
     assertEquals(expected, nextPlayer)
     nextPlayer.cards.apply { remove(minByOrNull { it.value }) }
   }
 
-  private fun createInGamePlayer(vararg cardValues: Int): Player =
-    Player(
-      name = UUID.randomUUID().toString(),
+  private fun createInGamePlayer(vararg cardValues: Int): GameConnection =
+    GameConnection(
+      server = InMemoryServer(GameConfig(0, 0, 0)),
       gameId = UUID.randomUUID().toString(),
-      isHost = Random.nextBoolean(),
+      playerId = UUID.randomUUID().toString(),
+      player = Player(name = UUID.randomUUID().toString(), isHost = Random.nextBoolean()),
       state =
         InGame(
+          currentRound = 1,
           cards = cardValues.map { Card(value = it) }.shuffled().toMutableList(),
           lives = Random.nextInt(1, 3),
           stars = Random.nextInt(0, 2),
