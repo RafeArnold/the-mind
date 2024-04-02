@@ -66,6 +66,7 @@ data class InLobby(
 ) : GameState
 
 data class InGame(
+  val allPlayers: MutableList<String>,
   var currentRound: Int,
   var cards: MutableList<Card>,
   var lives: Int,

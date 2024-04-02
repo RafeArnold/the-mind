@@ -54,6 +54,7 @@ class InMemoryServer(private val gameConfig: GameConfig) : Server {
     for (player in game.connections) {
       player.state =
         InGame(
+          allPlayers = (player.state as InLobby).allPlayers,
           currentRound = 1,
           cards = mutableListOf(Card(deck.next())),
           lives = gameConfig.startingLivesCount,

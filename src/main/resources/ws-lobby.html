@@ -1,10 +1,6 @@
 <div id="connection-window">
   game id: <b data-testid="game-id">{{model.gameId}}</b>
-  <ul data-testid="all-players">
-    {% for playerName in model.allPlayers %}
-    <li data-testid="player-name">{{ playerName }}</li>
-    {% endfor %}
-  </ul>
+  {% include "all-players.html" %}
   {% if model.isHost %}
   <form ws-send>
     <input type="hidden" name="action" value="start">

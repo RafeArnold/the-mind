@@ -37,6 +37,7 @@ interface LobbyView {
 data class GameViewModel(
   override val currentLivesCount: Int,
   override val currentThrowingStarsCount: Int,
+  override val allPlayers: List<String>,
   override val cards: List<Int>,
   override val playersVotingToThrowStar: Collection<String>,
 ) : GameView, ViewModel {
@@ -46,6 +47,7 @@ data class GameViewModel(
 data class WsGameViewModel(
   override val currentLivesCount: Int,
   override val currentThrowingStarsCount: Int,
+  override val allPlayers: List<String>,
   override val cards: List<Int>,
   override val playersVotingToThrowStar: Collection<String>,
 ) : GameView, ViewModel {
@@ -55,6 +57,7 @@ data class WsGameViewModel(
 interface GameView {
   val currentLivesCount: Int
   val currentThrowingStarsCount: Int
+  val allPlayers: List<String>
   val cards: List<Int>
   val playersVotingToThrowStar: Collection<String>
 }

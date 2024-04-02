@@ -86,19 +86,20 @@ class Index(
       if (connection == null) {
         HomeViewModel
       } else {
-        when (connection.state) {
+        when (val state = connection.state) {
           is InLobby ->
             LobbyViewModel(
               gameId = connection.gameId,
               isHost = connection.player.isHost,
-              allPlayers = (connection.state as InLobby).allPlayers,
+              allPlayers = state.allPlayers,
             )
           is InGame ->
             GameViewModel(
-              currentLivesCount = connection.lives,
-              currentThrowingStarsCount = connection.stars,
-              cards = connection.cards.map { card -> card.value }.sorted(),
-              playersVotingToThrowStar = connection.playersVotingToThrowStar,
+              currentLivesCount = state.lives,
+              currentThrowingStarsCount = state.stars,
+              allPlayers = state.allPlayers,
+              cards = state.cards.map { card -> card.value }.sorted(),
+              playersVotingToThrowStar = state.playersVotingToThrowStar,
             )
           is GameLost -> TODO()
           is GameWon -> TODO()
@@ -150,21 +151,22 @@ private fun Websocket.sendView(
   view: BiDiWsMessageLens<ViewModel>,
 ) {
   val model: ViewModel =
-    when (connection.state) {
+    when (val state = connection.state) {
       is GameLost -> WsGameLostModel
       is GameWon -> WsGameWonModel
       is InGame ->
         WsGameViewModel(
-          currentLivesCount = connection.lives,
-          currentThrowingStarsCount = connection.stars,
-          cards = connection.cards.map { card -> card.value }.sorted(),
-          playersVotingToThrowStar = connection.playersVotingToThrowStar,
+          currentLivesCount = state.lives,
+          currentThrowingStarsCount = state.stars,
+          allPlayers = state.allPlayers,
+          cards = state.cards.map { card -> card.value }.sorted(),
+          playersVotingToThrowStar = state.playersVotingToThrowStar,
         )
       is InLobby ->
         WsLobbyViewModel(
           gameId = connection.gameId,
           isHost = connection.player.isHost,
-          allPlayers = (connection.state as InLobby).allPlayers,
+          allPlayers = state.allPlayers,
         )
     }
   send(view(model))

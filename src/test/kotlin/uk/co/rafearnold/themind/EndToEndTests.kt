@@ -190,6 +190,15 @@ class EndToEndTests {
     allPlayers[2].joinGame(gameId)
     allPlayers.forEach { it.assertPlayersAre(allPlayers.map { p -> p.name }) }
   }
+
+  @Test
+  fun `all players in game are displayed`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+
+    val allPlayers = server.startNewGame(browser)
+
+    allPlayers.forEach { it.assertPlayersAre(allPlayers.map { p -> p.name }) }
+  }
 }
 
 private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {

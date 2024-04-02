@@ -344,6 +344,7 @@ class TestSupportTests {
       player = Player(name = UUID.randomUUID().toString(), isHost = Random.nextBoolean()),
       state =
         InGame(
+          allPlayers = mutableListOf(),
           currentRound = 1,
           cards = cardValues.map { Card(value = it) }.shuffled().toMutableList(),
           lives = Random.nextInt(1, 3),
