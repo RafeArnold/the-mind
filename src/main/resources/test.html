@@ -4,43 +4,58 @@
   <meta charset="UTF-8">
   <title>Title</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body class="bg-zinc-900 text-zinc-200 m-5">
-<div class="grid grid-cols-2 p-2 text-center">
-  <div class="text-4xl">Round 5</div>
-  <div class="text-4xl">Lives : 2</div>
+<div class="flex items-center">
+  <div class="w-full text-center text-4xl">level 5</div>
+  <div class="w-full text-center text-4xl"><i class="fa-solid fa-heart"></i> : 2</div>
+  <button class="py-2 px-6 rounded-lg bg-red-500 text-center text-2xl">leave</button>
 </div>
-<div class="my-12 flex justify-evenly">
-  <div class="relative min-w-36 min-h-52 rounded-xl border-indigo-500 border-4 m-5 bg-zinc-300 text-zinc-900"><div class="absolute w-full px-1 flex justify-end font-semibold text-2xl">1</div><div class="h-full flex items-center justify-center text-6xl font-extrabold">1</div></div>
-  <div class="relative min-w-36 min-h-52 rounded-xl border-indigo-500 border-4 m-5 bg-zinc-300 text-zinc-900"><div class="absolute w-full px-1 flex justify-end font-semibold text-2xl">5</div><div class="h-full flex items-center justify-center text-6xl font-extrabold">5</div></div>
-  <div class="relative min-w-36 min-h-52 rounded-xl border-indigo-500 border-4 m-5 bg-zinc-300 text-zinc-900"><div class="absolute w-full px-1 flex justify-end font-semibold text-2xl">55</div><div class="h-full flex items-center justify-center text-6xl font-extrabold">55</div></div>
-  <div class="relative min-w-36 min-h-52 rounded-xl border-indigo-500 border-4 m-5 bg-zinc-300 text-zinc-900"><div class="absolute w-full px-1 flex justify-end font-semibold text-2xl">100</div><div class="h-full flex items-center justify-center text-6xl font-extrabold">100</div></div>
+<div class="relative">
+  <div class="absolute w-full flex items-center justify-center">
+    <div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">100</div><div class="absolute w-full px-1 font-semibold text-lg">100</div></div>
+  </div>
 </div>
-<div class="flex flex-wrap gap-12 justify-evenly">
+<div class="my-5 flex flex-wrap gap-12 justify-evenly">
   <div class="rounded-3xl border-amber-500 border-2">
-    <div class="pt-3 px-5 mx-auto max-w-96 text-center truncate">a</div>
-    <div class="flex justify-center">
-      <div class="min-w-28 min-h-36 rounded-xl border-amber-500 border-2 m-5 bg-zinc-800 text-center"></div>
-      <div class="min-w-28 min-h-36 rounded-xl border-amber-500 border-2 m-5 bg-zinc-800 text-center"></div>
-      <div class="min-w-28 min-h-36 rounded-xl border-amber-500 border-2 m-5 bg-zinc-800 text-center"></div>
-      <div class="min-w-28 min-h-36 rounded-xl border-amber-500 border-2 m-5 bg-zinc-800 text-center"></div>
+    <div class="flex gap-3 max-w-56 px-5 justify-center">
+      <div class="pt-3 text-center truncate">a</div>
+      <div class="pt-3 text-center"><i class="fa-solid fa-star" style="color: #FFFFFF;"></i></div>
+    </div>
+    <div class="relative min-w-56 min-h-64 flex justify-center items-center">
+      <div class="absolute origin-bottom-left rotate-[-18deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="absolute origin-bottom-left rotate-[-6deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="absolute origin-bottom-left rotate-[6deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="absolute origin-bottom-left rotate-[18deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
     </div>
   </div>
   <div class="rounded-3xl border-amber-500 border-2">
-    <div class="pt-3 px-5 text-center m-auto truncate max-w-96">sasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregre</div>
-    <div class="flex justify-center">
-      <div class="min-w-28 min-h-36 rounded-xl border-amber-500 border-2 m-5 bg-zinc-800 text-center"></div>
-      <div class="min-w-28 min-h-36 rounded-xl border-amber-500 border-2 m-5 bg-zinc-800 text-center"></div>
-      <div class="min-w-28 min-h-36 rounded-xl border-amber-500 border-2 m-5 bg-zinc-800 text-center"></div>
+    <div class="flex gap-3 max-w-56 px-5 justify-center">
+      <div class="pt-3 text-center truncate">sasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregre</div>
+    </div>
+    <div class="relative min-w-56 min-h-64 flex justify-center items-center">
+      <div class="absolute origin-bottom-left rotate-[-12deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="absolute origin-bottom-left rotate-[0deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="absolute origin-bottom-left rotate-[12deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
     </div>
   </div>
   <div class="rounded-3xl border-amber-500 border-2">
-    <div class="pt-3 px-5 text-center m-auto truncate max-w-96">sasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregre</div>
-    <div class="flex justify-center">
-      <div class="min-w-28 min-h-36 rounded-xl border-amber-500 border-2 m-5 bg-zinc-800 text-center"></div>
-      <div class="min-w-28 min-h-36 rounded-xl border-amber-500 border-2 m-5 bg-zinc-800 text-center"></div>
+    <div class="flex gap-3 max-w-56 px-5 justify-center">
+      <div class="pt-3 text-center truncate">sasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregre</div>
+      <div class="pt-3 text-center"><i class="fa-solid fa-star" style="color: #FFFFFF;"></i></div>
+    </div>
+    <div class="relative min-w-56 min-h-64 flex justify-center items-center">
+      <div class="absolute origin-bottom-left rotate-[-6deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="absolute origin-bottom-left rotate-[6deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
     </div>
   </div>
+</div>
+<div class="relative min-h-80 flex items-center justify-evenly">
+  <div class="absolute origin-bottom-left rotate-[-18deg]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">100</div><div class="absolute w-full px-1 font-semibold text-lg">100</div></div></div>
+  <div class="absolute origin-bottom-left rotate-[-6deg]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">55</div><div class="absolute w-full px-1 font-semibold text-lg">55</div></div></div>
+  <div class="absolute origin-bottom-left rotate-[6deg]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">5</div><div class="absolute w-full px-1 font-semibold text-lg">5</div></div></div>
+  <div class="absolute origin-bottom-left rotate-[18deg]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">1</div><div class="absolute w-full px-1 font-semibold text-lg">1</div></div></div>
 </div>
 </body>
 </html>
