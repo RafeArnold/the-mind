@@ -64,6 +64,7 @@ class InMemoryServer(private val gameConfig: GameConfig) : Server {
           lives = gameConfig.startingLivesCount,
           stars = gameConfig.startingStarsCount,
           isVotingToThrowStar = false,
+          lastPlayedCardValue = null,
         )
     }
     game.triggerUpdate()
@@ -96,6 +97,7 @@ class InMemoryServer(private val gameConfig: GameConfig) : Server {
       }
     }
     game.connections.forEach {
+      it.lastPlayedCardValue = removedCard.value
       it.resetVotes()
       for ((otherPlayerId, count) in playerCardsCounts
         .filter { (otherPlayerId, _) -> it.player.id != otherPlayerId }) {
@@ -155,11 +157,12 @@ class InMemoryServer(private val gameConfig: GameConfig) : Server {
         setState(GameWon)
       } else {
         val nextRound = currentRound + 1
-        connections.forEach { it.currentRound = nextRound }
         val deck = shuffledDeck()
         for (player in connections) {
+          player.currentRound = nextRound
           player.cards = (1..nextRound).map { Card(deck.next()) }.toMutableList()
           player.otherPlayers.forEach { it.cardCount = nextRound }
+          player.lastPlayedCardValue = null
         }
       }
     }
@@ -232,3 +235,9 @@ private var GameConnection.isVotingToThrowStar: Boolean
 
 private val GameConnection.otherPlayers: List<OtherPlayer>
   get() = (state as InGame).otherPlayers
+
+private var GameConnection.lastPlayedCardValue: Int?
+  get() = (state as InGame).lastPlayedCardValue
+  set(value) {
+    (state as InGame).lastPlayedCardValue = value
+  }

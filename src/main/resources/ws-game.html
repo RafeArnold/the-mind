@@ -22,7 +22,11 @@
   </div>
   <div class="m-5 flex items-center justify-center">
     <div class="p-10 max-w-xl grow flex items-center justify-center rounded-3xl border-rose-800 border-2">
-      <div class="relative w-36 h-52 rounded-xl border-rose-800 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">100</div><div class="absolute w-full px-1 font-semibold text-lg">100</div></div>
+      <div class="relative w-36 h-52 rounded-xl border-rose-800 border-4 bg-zinc-300 text-zinc-900">
+        {% if model.lastPlayedCard %}
+        <div class="absolute size-full flex items-center justify-center text-6xl font-extrabold" data-testid="last-played-card-value">{{model.lastPlayedCard}}</div><div class="absolute w-full px-1 font-semibold text-lg">{{model.lastPlayedCard}}</div>
+        {% endif %}
+      </div>
     </div>
   </div>
   <div class="m-5 flex items-center justify-evenly" data-testid="card-list">

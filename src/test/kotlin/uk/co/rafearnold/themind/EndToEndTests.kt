@@ -447,6 +447,42 @@ class EndToEndTests {
       p.assertOtherPlayerCardCountsAre(expectedCounts.filterKeys { p != it })
     }
   }
+
+  @Test
+  fun `last played card is displayed`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 2, startingStarsCount = 1))
+
+    val allPlayers = server.startNewGame(browser)
+
+    allPlayers.forEach { p -> p.assertLastPlayedCardValueIs(null) }
+
+    // Play incorrect card.
+    val sortedPlayers = allPlayers.sortedByMinCardValue()
+    val incorrectPlayer = sortedPlayers[1]
+    val incorrectPlayerMinCardValue = incorrectPlayer.minCardValue()
+    incorrectPlayer.playCard(toCompleteRound = false)
+    allPlayers.forEach { p -> p.assertLastPlayedCardValueIs(incorrectPlayerMinCardValue) }
+
+    // Play the last card of the round.
+    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    allPlayers.forEach { p -> p.assertLastPlayedCardValueIs(null) }
+
+    // Play the correct card.
+    var nextPlayer = allPlayers.nextPlayer()
+    var nextPlayerMinCardValue = nextPlayer.minCardValue()
+    nextPlayer.playCard(toCompleteRound = false)
+    allPlayers.forEach { p -> p.assertLastPlayedCardValueIs(nextPlayerMinCardValue) }
+
+    // Throw a star.
+    allPlayers.forEach { it.voteToThrowStar() }
+    allPlayers.forEach { p -> p.assertLastPlayedCardValueIs(nextPlayerMinCardValue) }
+
+    // Play the correct card.
+    nextPlayer = allPlayers.nextPlayer()
+    nextPlayerMinCardValue = nextPlayer.minCardValue()
+    nextPlayer.playCard(toCompleteRound = false)
+    allPlayers.forEach { p -> p.assertLastPlayedCardValueIs(nextPlayerMinCardValue) }
+  }
 }
 
 private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
@@ -467,6 +503,21 @@ private fun PlayerContext.assertPlayerHasLeft(playerName: String) {
 
 private fun Page.assertPlayerHasLeft(playerName: String) {
   assertThat(playerLeftText()).hasText("$playerName left")
+}
+
+private fun PlayerContext.assertLastPlayedCardValueIs(value: Int?) {
+  page.assertLastPlayedCardValueIs(value = value)
+}
+
+private fun Page.assertLastPlayedCardValueIs(value: Int?) {
+  val cardValue = getByTestId("last-played-card-value")
+  if (value != null) {
+    assertThat(cardValue).hasCount(1)
+    assertThat(cardValue).hasText(value.toString())
+  } else {
+    assertThat(cardValue).hasCount(0)
+    assertThat(cardValue).not().isAttached()
+  }
 }
 
 private fun PlayerContext.assertAllPlayersAre(names: List<String>) {

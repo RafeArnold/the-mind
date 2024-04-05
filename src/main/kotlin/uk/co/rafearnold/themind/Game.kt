@@ -80,6 +80,7 @@ data class InGame(
   var lives: Int,
   var stars: Int,
   var isVotingToThrowStar: Boolean,
+  var lastPlayedCardValue: Int?,
 ) : GameState
 
 data object GameWon : GameState
