@@ -6,56 +6,96 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
-<body class="bg-zinc-900 text-zinc-200 m-5">
-<div class="flex items-center">
-  <div class="w-full text-center text-4xl">level 5</div>
-  <div class="w-full text-center text-4xl"><i class="fa-solid fa-heart"></i> : 2</div>
+<body class="bg-zinc-900 text-zinc-200">
+<div class="sticky top-0 z-10 p-5 flex items-center">
+  <div class="w-full text-center text-5xl">level 5</div>
+  <div class="w-full text-center text-5xl"><i class="fa-solid fa-heart"></i> : 2</div>
+  <div class="w-full text-center text-5xl"><button><i class="fa-solid fa-star transition ease-in-out hover:text-amber-500 duration-300"></i></button> : 2</div>
   <button class="py-2 px-6 rounded-lg bg-red-500 text-center text-2xl">leave</button>
 </div>
-<div class="relative">
-  <div class="absolute w-full flex items-center justify-center">
-    <div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">100</div><div class="absolute w-full px-1 font-semibold text-lg">100</div></div>
-  </div>
-</div>
-<div class="my-5 flex flex-wrap gap-12 justify-evenly">
-  <div class="rounded-3xl border-amber-500 border-2">
-    <div class="flex gap-3 max-w-56 px-5 justify-center">
-      <div class="pt-3 text-center truncate">a</div>
+<div class="mx-5 flex flex-wrap gap-5 justify-center">
+  <div class="group rounded-3xl border-amber-500 border-2">
+    <div class="flex gap-3 max-w-56 px-5">
+      <div class="pt-3 mx-auto text-center truncate">a</div>
       <div class="pt-3 text-center"><i class="fa-solid fa-star" style="color: #FFFFFF;"></i></div>
     </div>
     <div class="relative min-w-56 min-h-64 flex justify-center items-center">
-      <div class="absolute origin-bottom-left rotate-[-18deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
-      <div class="absolute origin-bottom-left rotate-[-6deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
-      <div class="absolute origin-bottom-left rotate-[6deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
-      <div class="absolute origin-bottom-left rotate-[18deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[-18deg] duration-300 absolute origin-bottom-left rotate-[-6deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[-6deg] duration-300 absolute origin-bottom-left rotate-[-2deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[6deg] duration-300 absolute origin-bottom-left rotate-[2deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[18deg] duration-300 absolute origin-bottom-left rotate-[6deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
     </div>
   </div>
-  <div class="rounded-3xl border-amber-500 border-2">
-    <div class="flex gap-3 max-w-56 px-5 justify-center">
-      <div class="pt-3 text-center truncate">sasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregre</div>
+  <div class="group rounded-3xl border-amber-500 border-2">
+    <div class="flex gap-3 max-w-56 px-5">
+      <div class="pt-3 mx-auto text-center truncate">a</div>
     </div>
     <div class="relative min-w-56 min-h-64 flex justify-center items-center">
-      <div class="absolute origin-bottom-left rotate-[-12deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
-      <div class="absolute origin-bottom-left rotate-[0deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
-      <div class="absolute origin-bottom-left rotate-[12deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[-12deg] duration-300 absolute origin-bottom-left rotate-[-4deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[0deg] duration-300 absolute origin-bottom-left rotate-[0deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[12deg] duration-300 absolute origin-bottom-left rotate-[4deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
     </div>
   </div>
-  <div class="rounded-3xl border-amber-500 border-2">
-    <div class="flex gap-3 max-w-56 px-5 justify-center">
-      <div class="pt-3 text-center truncate">sasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregre</div>
+  <div class="group rounded-3xl border-amber-500 border-2">
+    <div class="flex gap-3 max-w-56 px-5">
+      <div class="pt-3 mx-auto text-center truncate">sasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregre</div>
       <div class="pt-3 text-center"><i class="fa-solid fa-star" style="color: #FFFFFF;"></i></div>
     </div>
     <div class="relative min-w-56 min-h-64 flex justify-center items-center">
-      <div class="absolute origin-bottom-left rotate-[-6deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
-      <div class="absolute origin-bottom-left rotate-[6deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[-6deg] duration-300 absolute origin-bottom-left rotate-[-2deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[6deg] duration-300 absolute origin-bottom-left rotate-[2deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+    </div>
+  </div>
+  <div class="group rounded-3xl border-amber-500 border-2">
+    <div class="flex gap-3 max-w-56 px-5">
+      <div class="pt-3 mx-auto text-center truncate">sasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregre</div>
+    </div>
+    <div class="relative min-w-56 min-h-64 flex justify-center items-center">
+      <div class="transition ease-in-out group-hover:rotate-[-6deg] duration-300 absolute origin-bottom-left rotate-[-2deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[6deg] duration-300 absolute origin-bottom-left rotate-[2deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+    </div>
+  </div>
+  <div class="group rounded-3xl border-amber-500 border-2">
+    <div class="flex gap-3 max-w-56 px-5">
+      <div class="pt-3 mx-auto text-center truncate">sasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregresasdadsgfsdgregre</div>
+      <div class="pt-3 text-center"><i class="fa-solid fa-star" style="color: #FFFFFF;"></i></div>
+    </div>
+    <div class="relative min-w-56 min-h-64 flex justify-center items-center">
+      <div class="transition ease-in-out group-hover:rotate-[-66deg] duration-300 absolute origin-bottom-left rotate-[-22deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[-54deg] duration-300 absolute origin-bottom-left rotate-[-18deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[-42deg] duration-300 absolute origin-bottom-left rotate-[-14deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[-30deg] duration-300 absolute origin-bottom-left rotate-[-10deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[-18deg] duration-300 absolute origin-bottom-left rotate-[-6deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[-6deg] duration-300 absolute origin-bottom-left rotate-[-2deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[6deg] duration-300 absolute origin-bottom-left rotate-[2deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[18deg] duration-300 absolute origin-bottom-left rotate-[6deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[30deg] duration-300 absolute origin-bottom-left rotate-[10deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[42deg] duration-300 absolute origin-bottom-left rotate-[14deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[54deg] duration-300 absolute origin-bottom-left rotate-[18deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
+      <div class="transition ease-in-out group-hover:rotate-[66deg] duration-300 absolute origin-bottom-left rotate-[22deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800"></div>
     </div>
   </div>
 </div>
-<div class="relative min-h-80 flex items-center justify-evenly">
-  <div class="absolute origin-bottom-left rotate-[-18deg]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">100</div><div class="absolute w-full px-1 font-semibold text-lg">100</div></div></div>
-  <div class="absolute origin-bottom-left rotate-[-6deg]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">55</div><div class="absolute w-full px-1 font-semibold text-lg">55</div></div></div>
-  <div class="absolute origin-bottom-left rotate-[6deg]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">5</div><div class="absolute w-full px-1 font-semibold text-lg">5</div></div></div>
-  <div class="absolute origin-bottom-left rotate-[18deg]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">1</div><div class="absolute w-full px-1 font-semibold text-lg">1</div></div></div>
+<div class="m-5 flex items-center justify-center">
+  <div class="p-10 max-w-xl grow flex items-center justify-center rounded-3xl border-rose-800 border-2">
+    <div class="relative w-36 h-52 rounded-xl border-rose-800 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">100</div><div class="absolute w-full px-1 font-semibold text-lg">100</div></div>
+  </div>
+</div>
+<div class="m-5 flex items-center justify-evenly">
+  <div tabindex="0" role="button" class="relative min-h-80 flex items-center justify-evenly">
+    <div class="absolute origin-bottom-left rotate-[-22deg] translate-x-[-132px]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">100</div><div class="absolute w-full px-1 font-semibold text-lg">100</div></div></div>
+    <div class="absolute origin-bottom-left rotate-[-18deg] translate-x-[-108px]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">99</div><div class="absolute w-full px-1 font-semibold text-lg">99</div></div></div>
+    <div class="absolute origin-bottom-left rotate-[-14deg] translate-x-[-84px]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">88</div><div class="absolute w-full px-1 font-semibold text-lg">88</div></div></div>
+    <div class="absolute origin-bottom-left rotate-[-10deg] translate-x-[-60px]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">77</div><div class="absolute w-full px-1 font-semibold text-lg">77</div></div></div>
+    <div class="absolute origin-bottom-left rotate-[-6deg] translate-x-[-36px]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">66</div><div class="absolute w-full px-1 font-semibold text-lg">66</div></div></div>
+    <div class="absolute origin-bottom-left rotate-[-2deg] translate-x-[-12px]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">55</div><div class="absolute w-full px-1 font-semibold text-lg">55</div></div></div>
+    <div class="absolute origin-bottom-left rotate-[2deg] translate-x-[12px]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">44</div><div class="absolute w-full px-1 font-semibold text-lg">44</div></div></div>
+    <div class="absolute origin-bottom-left rotate-[6deg] translate-x-[36px]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">33</div><div class="absolute w-full px-1 font-semibold text-lg">33</div></div></div>
+    <div class="absolute origin-bottom-left rotate-[10deg] translate-x-[60px]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">22</div><div class="absolute w-full px-1 font-semibold text-lg">22</div></div></div>
+    <div class="absolute origin-bottom-left rotate-[14deg] translate-x-[84px]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">11</div><div class="absolute w-full px-1 font-semibold text-lg">11</div></div></div>
+    <div class="absolute origin-bottom-left rotate-[18deg] translate-x-[108px]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">9</div><div class="absolute w-full px-1 font-semibold text-lg">9</div></div></div>
+    <div class="absolute origin-bottom-left rotate-[22deg] translate-x-[132px]"><div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">1</div><div class="absolute w-full px-1 font-semibold text-lg">1</div></div></div>
+  </div>
 </div>
 </body>
 </html>
