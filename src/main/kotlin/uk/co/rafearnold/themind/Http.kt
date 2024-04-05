@@ -92,15 +92,16 @@ class Index(
             LobbyViewModel(
               gameId = connection.gameId,
               isHost = connection.player.isHost,
-              allPlayers = state.allPlayers,
+              allPlayers = state.allPlayers.map { it.name },
             )
           is InGame ->
             GameViewModel(
+              currentRound = state.currentRound,
               currentLivesCount = state.lives,
               currentThrowingStarsCount = state.stars,
-              allPlayers = state.allPlayers,
+              otherPlayers = state.otherPlayers,
               cards = state.cards.map { card -> card.value }.sorted(),
-              playersVotingToThrowStar = state.playersVotingToThrowStar,
+              isVotingToThrowStar = state.isVotingToThrowStar,
             )
           is GameLost -> GameLostViewModel
           is GameWon -> GameWonViewModel
@@ -163,17 +164,18 @@ private fun Websocket.sendView(
       is GameWon -> WsGameWonViewModel
       is InGame ->
         WsGameViewModel(
+          currentRound = state.currentRound,
           currentLivesCount = state.lives,
           currentThrowingStarsCount = state.stars,
-          allPlayers = state.allPlayers,
+          otherPlayers = state.otherPlayers,
           cards = state.cards.map { card -> card.value }.sorted(),
-          playersVotingToThrowStar = state.playersVotingToThrowStar,
+          isVotingToThrowStar = state.isVotingToThrowStar,
         )
       is InLobby ->
         WsLobbyViewModel(
           gameId = connection.gameId,
           isHost = connection.player.isHost,
-          allPlayers = state.allPlayers,
+          allPlayers = state.allPlayers.map { it.name },
         )
       is PlayerLeft -> WsPlayerLeftViewModel(playerThatLeftName = state.playerName)
     }
@@ -203,7 +205,7 @@ private fun handleNewPlayer(player: GameConnection): Response {
   val cookie =
     Cookie(
       name = PLAYER_ID_COOKIE,
-      value = player.playerId,
+      value = player.player.id,
       httpOnly = true,
       sameSite = SameSite.Strict,
     )

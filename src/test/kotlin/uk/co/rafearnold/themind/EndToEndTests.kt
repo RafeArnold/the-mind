@@ -81,27 +81,40 @@ class EndToEndTests {
     server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 1))
     val allPlayers = server.startNewGame(browser)
 
+    allPlayers.forEach { it.assertHasNThrowingStars(1) }
+
     // Complete first round.
     repeat(2) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
     allPlayers.nextPlayer().playCard(toCompleteRound = true)
+
+    allPlayers.forEach { it.assertHasNThrowingStars(1) }
 
     // Some vote to throw star.
     val initialVotingPlayers = allPlayers.take(2)
     initialVotingPlayers.forEach { it.voteToThrowStar() }
 
     // Votes are visible to all players.
-    allPlayers.forEach { p -> p.assertPlayersAreVoting(initialVotingPlayers.map { it.name }) }
+    allPlayers.forEach { p ->
+      p.assertOtherPlayersAreVoting(initialVotingPlayers.filter { it != p }.map { it.name })
+      if (initialVotingPlayers.contains(p)) p.assertIsVoting() else p.assertIsNotVoting()
+    }
+
+    allPlayers.forEach { it.assertHasNThrowingStars(1) }
 
     // Play a card.
     allPlayers.nextPlayer().playCard(toCompleteRound = false)
 
     // Votes reset.
-    allPlayers.forEach { it.assertPlayersAreVoting(emptyList()) }
+    allPlayers.forEach { it.assertOtherPlayersAreVoting(emptyList()) }
 
     val expectedCards = allPlayers.associate { it.name to it.cardValues().sorted().drop(1) }
 
+    allPlayers.forEach { it.assertHasNThrowingStars(1) }
+
     // All vote.
     allPlayers.forEach { it.voteToThrowStar() }
+
+    allPlayers.forEach { it.assertHasNThrowingStars(0) }
 
     // Lowest card of each player removed.
     allPlayers.forEach { it.assertHasCards(expectedCards[it.name]!!) }
@@ -214,23 +227,25 @@ class EndToEndTests {
     allPlayers.forEach { it.navigateToHome(port = server.port()) }
 
     val gameId: String = allPlayers[0].createGame()
-    allPlayers[0].assertPlayersAre(listOf(allPlayers[0].name))
+    allPlayers[0].assertAllPlayersAre(listOf(allPlayers[0].name))
 
     allPlayers[1].joinGame(gameId)
-    allPlayers[0].assertPlayersAre(listOf(allPlayers[0].name, allPlayers[1].name))
-    allPlayers[1].assertPlayersAre(listOf(allPlayers[0].name, allPlayers[1].name))
+    allPlayers[0].assertAllPlayersAre(listOf(allPlayers[0].name, allPlayers[1].name))
+    allPlayers[1].assertAllPlayersAre(listOf(allPlayers[0].name, allPlayers[1].name))
 
     allPlayers[2].joinGame(gameId)
-    allPlayers.forEach { it.assertPlayersAre(allPlayers.map { p -> p.name }) }
+    allPlayers.forEach { it.assertAllPlayersAre(allPlayers.map { p -> p.name }) }
   }
 
   @Test
-  fun `all players in game are displayed`() {
+  fun `other players in game are displayed`() {
     server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers = server.startNewGame(browser)
 
-    allPlayers.forEach { it.assertPlayersAre(allPlayers.map { p -> p.name }) }
+    allPlayers.forEach { p ->
+      p.assertOtherPlayersAre(allPlayers.filter { it != p }.map { it.name })
+    }
   }
 
   @Test
@@ -277,16 +292,16 @@ class EndToEndTests {
     allPlayers.drop(1).forEach { it.joinGame(gameId) }
 
     allPlayers.forEach {
-      it.assertPlayersAre(allPlayers.map { p -> p.name })
+      it.assertAllPlayersAre(allPlayers.map { p -> p.name })
       assertThat(it.page.leaveButton()).isVisible()
       assertThat(it.page.gameIdDisplay()).isVisible()
     }
 
     allPlayers[2].leaveGame(confirm = false)
-    allPlayers.take(2).forEach { it.assertPlayersAre(allPlayers.take(2).map { p -> p.name }) }
+    allPlayers.take(2).forEach { it.assertAllPlayersAre(allPlayers.take(2).map { p -> p.name }) }
 
     allPlayers[1].leaveGame(confirm = false)
-    allPlayers.take(1).forEach { it.assertPlayersAre(allPlayers.take(1).map { p -> p.name }) }
+    allPlayers.take(1).forEach { it.assertAllPlayersAre(allPlayers.take(1).map { p -> p.name }) }
 
     allPlayers[0].leaveGame(confirm = false)
 
@@ -302,14 +317,14 @@ class EndToEndTests {
     val gameId: String = allPlayers[0].createGame()
     allPlayers.drop(1).forEach { it.joinGame(gameId) }
 
-    allPlayers.forEach { it.assertPlayersAre(allPlayers.map { p -> p.name }) }
+    allPlayers.forEach { it.assertAllPlayersAre(allPlayers.map { p -> p.name }) }
     assertThat(allPlayers[0].page.startGameButton()).isVisible()
     allPlayers.drop(1).forEach { assertThat(it.page.startGameButton()).not().isAttached() }
 
     allPlayers[0].leaveGame(confirm = false)
 
     val newAllPlayers = allPlayers.drop(1)
-    newAllPlayers.forEach { it.assertPlayersAre(newAllPlayers.map { p -> p.name }) }
+    newAllPlayers.forEach { it.assertAllPlayersAre(newAllPlayers.map { p -> p.name }) }
     assertThat(newAllPlayers[0].page.startGameButton()).isVisible()
     newAllPlayers.drop(1).forEach { assertThat(it.page.startGameButton()).not().isAttached() }
   }
@@ -335,7 +350,6 @@ class EndToEndTests {
     val allPlayers = server.startNewGame(browser)
 
     allPlayers.forEach {
-      it.assertPlayersAre(allPlayers.map { p -> p.name })
       assertThat(it.page.leaveButton()).isVisible()
       assertThat(it.page.currentLivesCountDisplay()).isVisible()
     }
@@ -389,6 +403,50 @@ class EndToEndTests {
       assertThat(it.page.loserText()).not().isAttached()
     }
   }
+
+  @Test
+  fun `other player card counts are display`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 2, startingStarsCount = 1))
+
+    val allPlayers = server.startNewGame(browser)
+
+    var expectedCounts = allPlayers.associateWith { 1 }.toMutableMap()
+    allPlayers.forEach { p ->
+      p.assertOtherPlayerCardCountsAre(expectedCounts.filterKeys { p != it })
+    }
+
+    // Play incorrect card.
+    val sortedPlayers = allPlayers.sortedByMinCardValue()
+    val incorrectPlayer = sortedPlayers[1]
+    incorrectPlayer.playCard(toCompleteRound = false)
+    expectedCounts[sortedPlayers[0]] = expectedCounts[sortedPlayers[0]]!! - 1
+    expectedCounts[incorrectPlayer] = expectedCounts[incorrectPlayer]!! - 1
+    allPlayers.forEach { p ->
+      p.assertOtherPlayerCardCountsAre(expectedCounts.filterKeys { p != it })
+    }
+
+    // Play the last card of the round.
+    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    expectedCounts = allPlayers.associateWith { 2 }.toMutableMap()
+    allPlayers.forEach { p ->
+      p.assertOtherPlayerCardCountsAre(expectedCounts.filterKeys { p != it })
+    }
+
+    // Play the correct card.
+    val nextPlayer = allPlayers.nextPlayer()
+    nextPlayer.playCard(toCompleteRound = false)
+    expectedCounts[nextPlayer] = expectedCounts[nextPlayer]!! - 1
+    allPlayers.forEach { p ->
+      p.assertOtherPlayerCardCountsAre(expectedCounts.filterKeys { p != it })
+    }
+
+    // Throw a star.
+    allPlayers.forEach { it.voteToThrowStar() }
+    expectedCounts = expectedCounts.mapValues { it.value - 1 }.toMutableMap()
+    allPlayers.forEach { p ->
+      p.assertOtherPlayerCardCountsAre(expectedCounts.filterKeys { p != it })
+    }
+  }
 }
 
 private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
@@ -411,14 +469,38 @@ private fun Page.assertPlayerHasLeft(playerName: String) {
   assertThat(playerLeftText()).hasText("$playerName left")
 }
 
-private fun PlayerContext.assertPlayersAre(names: List<String>) {
-  page.assertPlayersAre(names = names)
+private fun PlayerContext.assertAllPlayersAre(names: List<String>) {
+  page.assertAllPlayersAre(names = names)
 }
 
-private fun Page.assertPlayersAre(names: List<String>) {
+private fun Page.assertAllPlayersAre(names: List<String>) {
   val allPlayers = getByTestId("all-players").getByTestId("player-name")
   assertThat(allPlayers).hasCount(names.size)
   assertThat(allPlayers).hasText(names.toTypedArray())
+}
+
+private fun PlayerContext.assertOtherPlayersAre(names: List<String>) {
+  page.assertOtherPlayersAre(names = names)
+}
+
+private fun Page.assertOtherPlayersAre(names: List<String>) {
+  val allPlayers = getByTestId("other-players").getByTestId("player-name")
+  assertThat(allPlayers).hasCount(names.size)
+  assertThat(allPlayers).hasText(names.toTypedArray())
+}
+
+private fun PlayerContext.assertOtherPlayerCardCountsAre(counts: Map<PlayerContext, Int>) {
+  page.assertOtherPlayerCardCountsAre(counts = counts.mapKeys { it.key.name })
+}
+
+private fun Page.assertOtherPlayerCardCountsAre(counts: Map<String, Int>) {
+  for ((playerName, count) in counts) {
+    val cards =
+      getByTestId("other-players")
+        .locator("[data-testid='other-player']:has([data-testplayername='$playerName'])")
+        .getByTestId("card")
+    assertThat(cards).hasCount(count)
+  }
 }
 
 private fun PlayerContext.assertHasNThrowingStars(n: Int) {
@@ -461,12 +543,31 @@ private fun Page.assertHasNLives(n: Int) {
   assertThat(livesDisplay).hasText(n.toString())
 }
 
-private fun PlayerContext.assertPlayersAreVoting(names: List<String>) {
-  page.assertPlayersAreVoting(names = names)
+private fun PlayerContext.assertIsVoting() {
+  page.assertIsVoting()
 }
 
-private fun Page.assertPlayersAreVoting(names: List<String>) {
-  val playersVoting = getByTestId("players-voting-to-throw-star").getByTestId("player-name")
+private fun Page.assertIsVoting() {
+  assertThat(voteToThrowStarButton()).hasCSS("color", "rgb(245, 158, 11)")
+}
+
+private fun PlayerContext.assertIsNotVoting() {
+  page.assertIsNotVoting()
+}
+
+private fun Page.assertIsNotVoting() {
+  assertThat(voteToThrowStarButton()).hasCSS("color", "rgb(228, 228, 231)")
+}
+
+private fun PlayerContext.assertOtherPlayersAreVoting(names: List<String>) {
+  page.assertOtherPlayersAreVoting(names = names)
+}
+
+private fun Page.assertOtherPlayersAreVoting(names: List<String>) {
+  val playersVoting =
+    getByTestId("other-players")
+      .locator("[data-testid='other-player']:has([data-testid='throwing-star-vote-indicator'])")
+      .getByTestId("player-name")
   assertThat(playersVoting).hasCount(names.size)
   assertThat(playersVoting).hasText(names.toTypedArray())
 }
@@ -503,16 +604,19 @@ private fun PlayerContext.playCard(toCompleteRound: Boolean) {
 
 private fun Page.playCard(toCompleteRound: Boolean) {
   val cardList = cardList()
-  val cardValues = cardList.allTextContents().sortedBy { it.trim().toInt() }
+  val cardValues = cardList.allTextContents().sortedByDescending { it.trim().toInt() }
   assertThat(cardList).hasText(cardValues.toTypedArray())
   val nextCard = cardList.nth(0)
   assertThat(nextCard).hasText(cardValues[0])
-  nextCard.getByTestId("play-card-button").click()
+  getByTestId("play-card-button").click()
   if (!toCompleteRound) {
     assertThat(cardList).hasCount(cardValues.size - 1)
-    assertThat(cardList).hasText(cardValues.drop(1).toTypedArray())
+    assertThat(cardList).hasText(cardValues.dropLast(1).toTypedArray())
   }
 }
+
+private fun List<PlayerContext>.sortedByMinCardValue(): List<PlayerContext> =
+  sortedBy { it.minCardValue() }
 
 private fun List<PlayerContext>.nextPlayer(): PlayerContext = minByOrNull { it.minCardValue() }!!
 
@@ -544,7 +648,7 @@ private fun Page.assertHasNCards(n: Int) {
   assertThat(cardList).hasText((1..n).map { cardValuePattern }.toTypedArray())
 }
 
-private fun Page.cardList(): Locator = getByTestId("card-list").getByTestId("card-item")
+private fun Page.cardList(): Locator = getByTestId("card-list").getByTestId("card-value")
 
 private fun PlayerContext.startGame() {
   page.startGame()

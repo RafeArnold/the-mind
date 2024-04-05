@@ -34,21 +34,23 @@ interface LobbyView {
 }
 
 data class GameViewModel(
+  override val currentRound: Int,
   override val currentLivesCount: Int,
   override val currentThrowingStarsCount: Int,
-  override val allPlayers: List<String>,
+  override val otherPlayers: List<OtherPlayer>,
   override val cards: List<Int>,
-  override val playersVotingToThrowStar: Collection<String>,
+  override val isVotingToThrowStar: Boolean,
 ) : GameView, ViewModel {
   override fun template(): String = "game"
 }
 
 data class WsGameViewModel(
+  override val currentRound: Int,
   override val currentLivesCount: Int,
   override val currentThrowingStarsCount: Int,
-  override val allPlayers: List<String>,
+  override val otherPlayers: List<OtherPlayer>,
   override val cards: List<Int>,
-  override val playersVotingToThrowStar: Collection<String>,
+  override val isVotingToThrowStar: Boolean,
 ) : GameView, ViewModel {
   override fun template(): String = "ws-game"
 }
@@ -56,11 +58,12 @@ data class WsGameViewModel(
 interface GameView {
   @Suppress("unused")
   val isInGame: Boolean get() = true
+  val currentRound: Int
   val currentLivesCount: Int
   val currentThrowingStarsCount: Int
-  val allPlayers: List<String>
+  val otherPlayers: List<OtherPlayer>
   val cards: List<Int>
-  val playersVotingToThrowStar: Collection<String>
+  val isVotingToThrowStar: Boolean
 }
 
 object GameWonViewModel : ViewModel {

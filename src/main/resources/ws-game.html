@@ -1,38 +1,52 @@
 <div id="connection-window">
-  <p>lives: <b data-testid="current-lives-count">{{model.currentLivesCount}}</b></p>
-  {% include "leave-button.html" %}
-  {% include "all-players.html" %}
-  <div data-testid="card-list">
-    <ul>
-      {% for card in model.cards %}
-      <li data-testid="card-item">
-        {% if loop.first %}
-        <form ws-send>
-          <input type="hidden" name="action" value="play">
-          <button type="submit" data-testid="play-card-button">{{ card }}</button>
-        </form>
-        {% else %}
-        {{ card }}
-        {% endif %}
-      </li>
-      {% endfor %}
-    </ul>
+  <div class="sticky top-0 z-10 p-5 flex items-center">
+    <div class="w-full text-center text-5xl">level {{model.currentRound}}</div>
+    <div class="w-full text-center text-5xl"><i class="fa-solid fa-heart"></i> : <span data-testid="current-lives-count">{{model.currentLivesCount}}</span></div>
+    <div class="w-full text-center text-5xl"><form ws-send><input type="hidden" name="action" value="vote"><button type="submit" class="transition ease-in-out {% if model.isVotingToThrowStar %}text-amber-500{% endif %} duration-300" data-testid="vote-to-throw-star-button" {% if model.currentThrowingStarsCount == 0 %}disabled{% endif %}><i class="fa-solid fa-star"></i></button> : <span data-testid="current-throwing-stars-count">{{model.currentThrowingStarsCount}}</span></form></div>
+    {% include "leave-button.html" %}
   </div>
-  <div>
+  <div class="mx-5 flex flex-wrap gap-5 justify-center" data-testid="other-players">
+    {% for player in model.otherPlayers %}
+    <div class="group rounded-3xl border-amber-500 border-2" data-testid="other-player">
+      <div class="flex gap-3 max-w-56 px-5">
+        <div class="pt-3 mx-auto text-center truncate" data-testid="player-name" data-testplayername="{{player.name}}">{{player.name}}</div>
+        {% if player.isVotingToThrowStar %}<div class="pt-3 text-center" data-testid="throwing-star-vote-indicator"><i class="fa-solid fa-star"></i></div>{% endif %}
+      </div>
+      <div class="relative min-w-56 min-h-64 flex justify-center items-center">
+        {% for _ in 0..(player.cardCount - 1) %}
+        <div class="transition ease-in-out group-hover:rotate-[{{transformation(loop.index, loop.length, 12)}}deg] duration-300 absolute origin-bottom-left rotate-[{{transformation(loop.index, loop.length, 4)}}deg] w-24 h-36 rounded-lg border-amber-500 border-2 bg-zinc-800" data-testid="card"></div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="m-5 flex items-center justify-center">
+    <div class="p-10 max-w-xl grow flex items-center justify-center rounded-3xl border-rose-800 border-2">
+      <div class="relative w-36 h-52 rounded-xl border-rose-800 border-4 bg-zinc-300 text-zinc-900"><div class="absolute size-full flex items-center justify-center text-6xl font-extrabold">100</div><div class="absolute w-full px-1 font-semibold text-lg">100</div></div>
+    </div>
+  </div>
+  <div class="m-5 flex items-center justify-evenly" data-testid="card-list">
     <form ws-send>
-      <input type="hidden" name="action" value="vote">
-      <button type="submit" data-testid="vote-to-throw-star-button"
-              {% if model.currentThrowingStarsCount == 0 %}disabled{% endif %}>
-        vote to throw star
+      <input type="hidden" name="action" value="play">
+      <button type="submit" class="relative w-1 min-h-80 flex items-center justify-evenly" data-testid="play-card-button">
+        {% for value in model.cards | reverse %}
+        {{ card(value, loop.index, loop.length) }}
+        {% endfor %}
       </button>
     </form>
-    <ul data-testid="players-voting-to-throw-star">
-      {% for playerName in model.playersVotingToThrowStar %}
-      <li data-testid="player-name">{{ playerName }}</li>
-      {% endfor %}
-    </ul>
-    <p>throwing stars:
-      <b data-testid="current-throwing-stars-count">{{model.currentThrowingStarsCount}}</b>
-    </p>
   </div>
 </div>
+
+{% macro card(value, index, total) %}
+<div
+  class="absolute origin-bottom-left rotate-[{{transformation(index, total, 4)}}deg] translate-x-[{{transformation(index, total, 24)}}px]">
+  <div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900">
+    <div class="absolute size-full flex items-center justify-center text-6xl font-extrabold"
+         data-testid="card-value">{{value}}
+    </div>
+    <div class="absolute px-1 font-semibold text-lg">{{value}}</div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro transformation(index, total, n) %}{{n * index - n * (total - 1) / 2}}{% endmacro %}

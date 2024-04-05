@@ -18,21 +18,15 @@ class Tests {
       )
     val host = server.createGame()
     val gameId = host.gameId
-    assertEquals(InLobby(allPlayers = mutableListOf(host.player.name)), host.state)
+    assertEquals(InLobby(allPlayers = mutableListOf(host.player)), host.state)
     val player2 = server.joinGame(gameId = gameId)
-    assertEquals(
-      InLobby(allPlayers = mutableListOf(host.player.name, player2.player.name)),
-      host.state,
-    )
-    assertEquals(
-      InLobby(allPlayers = mutableListOf(host.player.name, player2.player.name)),
-      player2.state,
-    )
+    assertEquals(InLobby(allPlayers = mutableListOf(host.player, player2.player)), host.state)
+    assertEquals(InLobby(allPlayers = mutableListOf(host.player, player2.player)), player2.state)
     val player3 = server.joinGame(gameId = gameId)
-    val allPlayerNames = mutableListOf(host.player.name, player2.player.name, player3.player.name)
-    assertEquals(InLobby(allPlayers = allPlayerNames), host.state)
-    assertEquals(InLobby(allPlayers = allPlayerNames), player2.state)
-    assertEquals(InLobby(allPlayers = allPlayerNames), player3.state)
+    val allPlayers = mutableListOf(host.player, player2.player, player3.player)
+    assertEquals(InLobby(allPlayers = allPlayers), host.state)
+    assertEquals(InLobby(allPlayers = allPlayers), player2.state)
+    assertEquals(InLobby(allPlayers = allPlayers), player3.state)
     server.startGame(host)
     host.assertInGameWithOneCard()
     player2.assertInGameWithOneCard()
@@ -156,23 +150,23 @@ class Tests {
     val allPlayers = mutableListOf(host, player2, player3)
     allPlayers.sortByMinCardValue()
     allPlayers.forEach { assertEquals(2, it.stars) }
-    allPlayers.forEach { assertFalse(it.votingToThrowStar) }
+    allPlayers.forEach { assertFalse(it.isVotingToThrowStar) }
 
     server.playCard(allPlayers[0])
 
     server.voteToThrowStar(player2)
-    assertTrue(player2.votingToThrowStar)
-    assertFalse(host.votingToThrowStar)
-    assertFalse(player3.votingToThrowStar)
+    assertTrue(player2.isVotingToThrowStar)
+    assertFalse(host.isVotingToThrowStar)
+    assertFalse(player3.isVotingToThrowStar)
     allPlayers.forEach { assertEquals(2, it.stars) }
     allPlayers[0].assertInGameWithNCards(0)
     allPlayers[1].assertInGameWithNCards(1)
     allPlayers[2].assertInGameWithNCards(1)
 
     server.voteToThrowStar(host)
-    assertTrue(player2.votingToThrowStar)
-    assertTrue(host.votingToThrowStar)
-    assertFalse(player3.votingToThrowStar)
+    assertTrue(player2.isVotingToThrowStar)
+    assertTrue(host.isVotingToThrowStar)
+    assertFalse(player3.isVotingToThrowStar)
     allPlayers.forEach { assertEquals(2, it.stars) }
     allPlayers[0].assertInGameWithNCards(0)
     allPlayers[1].assertInGameWithNCards(1)
@@ -181,7 +175,7 @@ class Tests {
     server.voteToThrowStar(player3)
     allPlayers.forEach { it.assertInGameWithNCards(2) }
     allPlayers.forEach { assertEquals(1, it.stars) }
-    allPlayers.forEach { assertFalse(it.votingToThrowStar) }
+    allPlayers.forEach { assertFalse(it.isVotingToThrowStar) }
 
     allPlayers[0].cards = mutableListOf(Card(value = 11), Card(value = 50))
     allPlayers[1].cards = mutableListOf(Card(value = 33), Card(value = 88))
@@ -192,16 +186,16 @@ class Tests {
     server.playCard(allPlayers[1])
 
     server.voteToThrowStar(allPlayers[0])
-    assertTrue(allPlayers[0].votingToThrowStar)
-    assertFalse(allPlayers[1].votingToThrowStar)
-    assertFalse(allPlayers[2].votingToThrowStar)
+    assertTrue(allPlayers[0].isVotingToThrowStar)
+    assertFalse(allPlayers[1].isVotingToThrowStar)
+    assertFalse(allPlayers[2].isVotingToThrowStar)
     allPlayers.forEach { assertEquals(1, it.stars) }
     allPlayers.forEach { it.assertInGameWithNCards(1) }
 
     server.voteToThrowStar(allPlayers[1])
-    assertTrue(allPlayers[0].votingToThrowStar)
-    assertTrue(allPlayers[1].votingToThrowStar)
-    assertFalse(allPlayers[2].votingToThrowStar)
+    assertTrue(allPlayers[0].isVotingToThrowStar)
+    assertTrue(allPlayers[1].isVotingToThrowStar)
+    assertFalse(allPlayers[2].isVotingToThrowStar)
     allPlayers.forEach { assertEquals(1, it.stars) }
     allPlayers.forEach { it.assertInGameWithNCards(1) }
 
@@ -228,20 +222,20 @@ class Tests {
     server.voteToThrowStar(allPlayers[1])
 
     server.playCard(allPlayers[0])
-    allPlayers.forEach { assertFalse(it.votingToThrowStar) }
+    allPlayers.forEach { assertFalse(it.isVotingToThrowStar) }
     allPlayers.forEach { assertEquals(1, it.stars) }
 
     server.voteToThrowStar(allPlayers[0])
 
     server.playCard(allPlayers[1])
-    allPlayers.forEach { assertFalse(it.votingToThrowStar) }
+    allPlayers.forEach { assertFalse(it.isVotingToThrowStar) }
     allPlayers.forEach { assertEquals(1, it.stars) }
 
     server.voteToThrowStar(allPlayers[0])
     server.voteToThrowStar(allPlayers[2])
 
     server.playCard(allPlayers[2])
-    allPlayers.forEach { assertFalse(it.votingToThrowStar) }
+    allPlayers.forEach { assertFalse(it.isVotingToThrowStar) }
     allPlayers.forEach { assertEquals(1, it.stars) }
     allPlayers.forEach { it.assertInGameWithNCards(2) }
   }
@@ -257,13 +251,10 @@ class Tests {
     val player2 = server.joinGame(gameId = gameId)
     val player3 = server.joinGame(gameId = gameId)
 
-    assertEquals(
-      listOf(host.player.name, player2.player.name, player3.player.name),
-      host.lobbyState.allPlayers,
-    )
+    assertEquals(listOf(host.player, player2.player, player3.player), host.lobbyState.allPlayers)
 
     server.leave(player3)
-    assertEquals(listOf(host.player.name, player2.player.name), host.lobbyState.allPlayers)
+    assertEquals(listOf(host.player, player2.player), host.lobbyState.allPlayers)
 
     server.startGame(host)
 
@@ -286,8 +277,21 @@ class Tests {
     server.startGame(host)
 
     assertEquals(
-      listOf(host.player.name, player2.player.name, player3.player.name),
-      host.inGameState.allPlayers,
+      listOf(
+        OtherPlayer(
+          id = player2.player.id,
+          name = player2.player.name,
+          isVotingToThrowStar = player2.isVotingToThrowStar,
+          cardCount = player2.cards.size,
+        ),
+        OtherPlayer(
+          id = player3.player.id,
+          name = player3.player.name,
+          isVotingToThrowStar = player3.isVotingToThrowStar,
+          cardCount = player3.cards.size,
+        ),
+      ),
+      host.inGameState.otherPlayers,
     )
 
     server.leave(player3)
@@ -303,14 +307,15 @@ private fun Server.createGame(): GameConnection =
 private fun Server.joinGame(gameId: String): GameConnection =
   joinGame(gameId = gameId, playerName = UUID.randomUUID().toString())
 
-private fun Server.startGame(connection: GameConnection) = startGame(playerId = connection.playerId)
+private fun Server.startGame(connection: GameConnection) =
+  startGame(playerId = connection.player.id)
 
-private fun Server.playCard(connection: GameConnection) = playCard(playerId = connection.playerId)
+private fun Server.playCard(connection: GameConnection) = playCard(playerId = connection.player.id)
 
 private fun Server.voteToThrowStar(connection: GameConnection) =
-  voteToThrowStar(playerId = connection.playerId)
+  voteToThrowStar(playerId = connection.player.id)
 
-private fun Server.leave(connection: GameConnection) = leave(playerId = connection.playerId)
+private fun Server.leave(connection: GameConnection) = leave(playerId = connection.player.id)
 
 private fun List<GameConnection>.nextPlayer(): GameConnection = minByOrNull { it.minCardValue() }!!
 
@@ -358,8 +363,8 @@ private val GameConnection.lives: Int
 private val GameConnection.stars: Int
   get() = (state as InGame).stars
 
-private val GameConnection.votingToThrowStar: Boolean
-  get() = (state as InGame).votingToThrowStar
+private val GameConnection.isVotingToThrowStar: Boolean
+  get() = (state as InGame).isVotingToThrowStar
 
 class TestSupportTests {
 
@@ -396,17 +401,20 @@ class TestSupportTests {
     GameConnection(
       server = InMemoryServer(GameConfig(0, 0, 0)),
       gameId = UUID.randomUUID().toString(),
-      playerId = UUID.randomUUID().toString(),
-      player = Player(name = UUID.randomUUID().toString(), isHost = Random.nextBoolean()),
+      player =
+        Player(
+          id = UUID.randomUUID().toString(),
+          name = UUID.randomUUID().toString(),
+          isHost = Random.nextBoolean(),
+        ),
       state =
         InGame(
-          allPlayers = mutableListOf(),
+          otherPlayers = mutableListOf(),
           currentRound = 1,
           cards = cardValues.map { Card(value = it) }.shuffled().toMutableList(),
           lives = Random.nextInt(1, 3),
           stars = Random.nextInt(0, 2),
-          votingToThrowStar = Random.nextBoolean(),
-          playersVotingToThrowStar = mutableSetOf(),
+          isVotingToThrowStar = Random.nextBoolean(),
         ),
     )
 }

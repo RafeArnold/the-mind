@@ -36,7 +36,6 @@ interface Server {
 data class GameConnection(
   val server: Server,
   val gameId: String,
-  val playerId: String,
   val player: Player,
   var state: GameState,
 ) : ActionReceiver, EventEmitter {
@@ -44,9 +43,9 @@ data class GameConnection(
 
   override fun receive(action: Action) {
     when (action) {
-      Action.PlayCard -> server.playCard(playerId = playerId)
-      Action.StartGame -> server.startGame(playerId = playerId)
-      Action.VoteToThrowStar -> server.voteToThrowStar(playerId = playerId)
+      Action.PlayCard -> server.playCard(playerId = player.id)
+      Action.StartGame -> server.startGame(playerId = player.id)
+      Action.VoteToThrowStar -> server.voteToThrowStar(playerId = player.id)
     }
   }
 
@@ -59,22 +58,28 @@ data class GameConnection(
   fun triggerUpdate() = listeners.values.forEach { it() }
 }
 
-data class Player(val name: String, var isHost: Boolean)
+data class Player(val id: String, val name: String, var isHost: Boolean)
+
+data class OtherPlayer(
+  val id: String,
+  val name: String,
+  var isVotingToThrowStar: Boolean,
+  var cardCount: Int,
+)
 
 sealed interface GameState
 
 data class InLobby(
-  val allPlayers: MutableList<String>,
+  val allPlayers: MutableList<Player>,
 ) : GameState
 
 data class InGame(
-  val allPlayers: MutableList<String>,
+  val otherPlayers: MutableList<OtherPlayer>,
   var currentRound: Int,
   var cards: MutableList<Card>,
   var lives: Int,
   var stars: Int,
-  var votingToThrowStar: Boolean,
-  val playersVotingToThrowStar: MutableSet<String>,
+  var isVotingToThrowStar: Boolean,
 ) : GameState
 
 data object GameWon : GameState
