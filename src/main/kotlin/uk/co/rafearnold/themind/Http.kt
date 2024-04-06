@@ -23,9 +23,11 @@ import org.http4k.format.Jackson.auto
 import org.http4k.lens.BiDiBodyLens
 import org.http4k.lens.BiDiWsMessageLens
 import org.http4k.lens.Header
+import org.http4k.routing.ResourceLoader
 import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
 import org.http4k.routing.routes
+import org.http4k.routing.static
 import org.http4k.server.Http4kServer
 import org.http4k.server.Jetty
 import org.http4k.server.PolyHandler
@@ -51,6 +53,7 @@ fun startServer(
   val gameServer = InMemoryServer(gameConfig = gameConfig)
   val router =
     routes(
+      static(ResourceLoader.Directory("src/main/resources/assets")).withBasePath("/assets"),
       Index(view, gameServer),
       CreateGame(gameServer),
       JoinGame(gameServer),
