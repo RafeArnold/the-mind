@@ -2,12 +2,15 @@ package uk.co.rafearnold.themind
 
 import java.util.UUID
 
-class InMemoryServer(private val gameConfig: GameConfig) : Server {
+class InMemoryServer(
+  private val gameConfig: GameConfig,
+  private val gameIdGenerator: GameIdGenerator = SqidsGameIdGenerator(),
+) : Server {
 
   private val games: MutableList<InternalGame> = mutableListOf()
 
   override fun createGame(playerName: String): GameConnection {
-    val gameId = UUID.randomUUID().toString()
+    val gameId = gameIdGenerator.nextId()
     val playerId = UUID.randomUUID().toString()
     val player = Player(id = playerId, name = playerName, isHost = true)
     val host =

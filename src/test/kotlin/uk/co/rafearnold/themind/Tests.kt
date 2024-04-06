@@ -299,6 +299,15 @@ class Tests {
     assertEquals(PlayerLeft(playerName = player3.player.name), host.state)
     assertEquals(PlayerLeft(playerName = player3.player.name), player2.state)
   }
+
+  @Test
+  fun `game ids are a reasonable format`() {
+    val server =
+      InMemoryServer(
+        gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 1),
+      )
+    repeat(10) { assertTrue(server.createGame().gameId.matches(Regex("[A-Z0-9]{2}"))) }
+  }
 }
 
 private fun Server.createGame(): GameConnection =

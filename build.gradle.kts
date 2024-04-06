@@ -18,6 +18,8 @@ dependencies {
 
   implementation("io.pebbletemplates:pebble:3.2.2")
 
+  implementation("org.sqids:sqids:0.1.0")
+
   implementation("ch.qos.logback:logback-classic:1.4.12")
 
   testImplementation(kotlin("test"))
