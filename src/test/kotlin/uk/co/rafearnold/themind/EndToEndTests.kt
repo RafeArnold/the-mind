@@ -405,7 +405,7 @@ class EndToEndTests {
   }
 
   @Test
-  fun `other player card counts are display`() {
+  fun `other player card counts are displayed`() {
     server = startServer(GameConfig(roundCount = 3, startingLivesCount = 2, startingStarsCount = 1))
 
     val allPlayers = server.startNewGame(browser)
