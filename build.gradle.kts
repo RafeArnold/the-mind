@@ -47,12 +47,13 @@ tasks.check {
 
 tasks.processResources {
   dependsOn("buildCss")
+  exclude("input/")
 }
 
 task("buildCss", NpxTask::class) {
   command = "tailwindcss"
   args = listOf(
-    "-i", "./src/main/resources/index.css",
+    "-i", "./src/main/resources/input/index.css",
     "-o", "./src/main/resources/assets/index.min.css",
     "-m",
   )
