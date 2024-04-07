@@ -105,7 +105,10 @@ class EndToEndTests {
     allPlayers.nextPlayer().playCard(toCompleteRound = false)
 
     // Votes reset.
-    allPlayers.forEach { it.assertOtherPlayersAreVoting(emptyList()) }
+    allPlayers.forEach {
+      it.assertIsNotVoting()
+      it.assertOtherPlayersAreVoting(emptyList())
+    }
 
     val expectedCards = allPlayers.associate { it.name to it.cardValues().sorted().drop(1) }
 
@@ -114,7 +117,11 @@ class EndToEndTests {
     // All vote.
     allPlayers.forEach { it.toggleVoteToThrowStar() }
 
-    allPlayers.forEach { it.assertHasNThrowingStars(0) }
+    allPlayers.forEach {
+      it.assertIsNotVoting()
+      it.assertOtherPlayersAreVoting(emptyList())
+      it.assertHasNThrowingStars(0)
+    }
 
     // Lowest card of each player removed.
     allPlayers.forEach { it.assertHasCards(expectedCards[it.name]!!) }
