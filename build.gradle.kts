@@ -1,4 +1,16 @@
 import com.github.gradle.node.npm.task.NpxTask
+import io.pebbletemplates.pebble.PebbleEngine
+import io.pebbletemplates.pebble.loader.FileLoader
+import java.io.FileWriter
+
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath("io.pebbletemplates:pebble:3.2.2")
+  }
+}
 
 plugins {
   kotlin("jvm") version "1.9.22"
@@ -48,15 +60,45 @@ tasks.check {
 tasks.processResources {
   dependsOn("buildCss")
   exclude("input/")
+  exclude("template-variants/")
 }
 
 task("buildCss", NpxTask::class) {
+  dependsOn("buildTemplateVariants")
   command = "tailwindcss"
   args = listOf(
     "-i", "./src/main/resources/input/index.css",
     "-o", "./src/main/resources/assets/index.min.css",
     "-m",
   )
+}
+
+/**
+ * Some of the Tailwind CSS classes in the application's templates are generated
+ * [dynamically](https://tailwindcss.com/docs/content-configuration#dynamic-class-names) at
+ * runtime, so Tailwind would not detect that they are required when its build command is executed.
+ * This task generates the variants of the templates that contain the CSS classes that Tailwind
+ * needs to know about, thus ensuring that they will be included in the output CSS file.
+ */
+task("buildTemplateVariants") {
+  doLast {
+    val engine =
+      PebbleEngine.Builder().loader(FileLoader().apply { prefix = "src/main/resources" }).build()
+    val outputDir = "src/main/resources/template-variants"
+    File(outputDir).mkdirs()
+    repeat(2) {
+      FileWriter("$outputDir/ws-game-$it.html").use { writer ->
+        val context =
+          mapOf(
+            "model" to mapOf(
+              "otherPlayers" to listOf(mapOf("cardCount" to 11 + it)),
+              "cards" to (1..11 + it).toList(),
+            )
+          )
+        engine.getTemplate("ws-game.html").evaluate(writer, context)
+      }
+    }
+  }
 }
 
 tasks.run.invoke {

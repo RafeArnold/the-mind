@@ -3,3 +3,4 @@
 /build/
 
 /src/main/resources/assets/index*.css
+/src/main/resources/template-variants/
