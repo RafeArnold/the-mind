@@ -308,6 +308,23 @@ class Tests {
       )
     repeat(10) { assertTrue(server.createGame().gameId.matches(Regex("[A-Z0-9]{2}"))) }
   }
+
+  @Test
+  fun `game id is case insensitive when joining game`() {
+    val server =
+      InMemoryServer(
+        gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
+      )
+
+    val host = server.createGame()
+    val player2 = server.joinGame(gameId = host.gameId.uppercase())
+    val player3 = server.joinGame(gameId = host.gameId.lowercase())
+
+    assertEquals(
+      listOf(host.player.name, player2.player.name, player3.player.name),
+      host.lobbyState.allPlayers.map { it.name },
+    )
+  }
 }
 
 private fun Server.createGame(): GameConnection =

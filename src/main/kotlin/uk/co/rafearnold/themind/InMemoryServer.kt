@@ -36,7 +36,7 @@ class InMemoryServer(
     val connection =
       GameConnection(
         server = this,
-        gameId = gameId,
+        gameId = game.id,
         player = player,
         state = InLobby(allPlayers = allPlayers.map { it.player }.toMutableList()),
       )
@@ -192,7 +192,8 @@ class InMemoryServer(
     return null
   }
 
-  private fun get(gameId: String): InternalGame = games.first { it.id == gameId }
+  private fun get(gameId: String): InternalGame =
+    games.first { it.id.equals(gameId, ignoreCase = true) }
 
   private fun shuffledDeck(): Iterator<Int> = (1..100).shuffled().iterator()
 
