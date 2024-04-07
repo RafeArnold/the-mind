@@ -1,9 +1,16 @@
+import com.github.gradle.node.npm.task.NpxTask
+
 plugins {
   kotlin("jvm") version "1.9.22"
   id("org.jmailen.kotlinter") version "4.2.0"
+  id("com.github.node-gradle.node") version "7.0.2"
+  id("com.github.johnrengelman.shadow") version "8.1.1"
+  application
 }
 
 group = "uk.co.rafearnold"
+
+application.mainClass = "uk.co.rafearnold.themind.MainKt"
 
 repositories {
   mavenCentral()
@@ -36,4 +43,17 @@ kotlin {
 
 tasks.check {
   dependsOn("installKotlinterPrePushHook")
+}
+
+tasks.processResources {
+  dependsOn("buildCss")
+}
+
+task("buildCss", NpxTask::class) {
+  command = "tailwindcss"
+  args = listOf(
+    "-i", "./src/main/resources/index.css",
+    "-o", "./src/main/resources/assets/index.min.css",
+    "-m",
+  )
 }
