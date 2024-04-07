@@ -2,6 +2,7 @@ package uk.co.rafearnold.themind
 
 import io.pebbletemplates.pebble.PebbleEngine
 import io.pebbletemplates.pebble.error.LoaderException
+import io.pebbletemplates.pebble.loader.ClasspathLoader
 import io.pebbletemplates.pebble.loader.FileLoader
 import org.http4k.template.TemplateRenderer
 import org.http4k.template.ViewModel
@@ -102,11 +103,7 @@ interface PlayerLeftView {
 }
 
 class PebbleTemplateRenderer(
-  private val engine: PebbleEngine =
-    PebbleEngine.Builder()
-      .cacheActive(false)
-      .loader(FileLoader().apply { prefix = "src/main/resources" })
-      .build(),
+  private val engine: PebbleEngine = PebbleEngineFactory.Delegate().create(),
 ) : TemplateRenderer {
   override fun invoke(viewModel: ViewModel): String =
     try {
@@ -117,4 +114,27 @@ class PebbleTemplateRenderer(
     } catch (e: LoaderException) {
       throw RuntimeException("Template ${viewModel.template()} not found", e)
     }
+}
+
+interface PebbleEngineFactory {
+  fun create(): PebbleEngine
+
+  class Delegate : PebbleEngineFactory {
+    override fun create(): PebbleEngine =
+      when (val config = ResourcesConfig()) {
+        is ResourcesConfig.Directory -> Directory(dirPath = config.rootDir).create()
+        is ResourcesConfig.Classpath -> Classpath().create()
+      }
+  }
+
+  class Classpath : PebbleEngineFactory {
+    override fun create(): PebbleEngine =
+      PebbleEngine.Builder().cacheActive(true).loader(ClasspathLoader()).build()
+  }
+
+  class Directory(private val dirPath: String) : PebbleEngineFactory {
+    override fun create(): PebbleEngine =
+      PebbleEngine.Builder()
+        .cacheActive(false).loader(FileLoader().apply { prefix = dirPath }).build()
+  }
 }

@@ -57,3 +57,7 @@ task("buildCss", NpxTask::class) {
     "-m",
   )
 }
+
+tasks.run.invoke {
+  environment("HOT_RESOURCE_RELOADING", true)
+}

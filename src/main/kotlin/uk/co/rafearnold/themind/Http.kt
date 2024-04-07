@@ -53,7 +53,7 @@ fun startServer(
   val gameServer = InMemoryServer(gameConfig = gameConfig)
   val router =
     routes(
-      static(ResourceLoader.Directory("src/main/resources/assets")).withBasePath("/assets"),
+      Assets(),
       Index(view, gameServer),
       CreateGame(gameServer),
       JoinGame(gameServer),
@@ -80,6 +80,10 @@ fun startServer(
   logger.info("Server started")
   return server
 }
+
+class Assets(
+  loader: ResourceLoader = AssetsLoaderFactory.Delegate().create(),
+) : RoutingHttpHandler by static(loader).withBasePath("/assets")
 
 class Index(
   view: BiDiBodyLens<ViewModel>,
@@ -225,3 +229,38 @@ private fun Server.connect(request: Request): GameConnection? =
 private val Request.playerId: String? get() = cookie(PLAYER_ID_COOKIE)?.value
 
 private const val PLAYER_ID_COOKIE: String = "themind_playerid"
+
+interface AssetsLoaderFactory {
+  fun create(): ResourceLoader
+
+  class Delegate : AssetsLoaderFactory {
+    override fun create(): ResourceLoader =
+      when (val config = ResourcesConfig()) {
+        is ResourcesConfig.Directory -> Directory(dirPath = "${config.rootDir}/assets").create()
+        is ResourcesConfig.Classpath -> Classpath(packagePath = "/assets").create()
+      }
+  }
+
+  class Classpath(private val packagePath: String) : AssetsLoaderFactory {
+    override fun create(): ResourceLoader = ResourceLoader.Classpath(packagePath)
+  }
+
+  class Directory(private val dirPath: String) : AssetsLoaderFactory {
+    override fun create(): ResourceLoader = ResourceLoader.Directory(dirPath)
+  }
+}
+
+sealed interface ResourcesConfig {
+  data object Classpath : ResourcesConfig
+
+  data class Directory(val rootDir: String) : ResourcesConfig
+
+  companion object {
+    operator fun invoke(): ResourcesConfig =
+      if (System.getenv("HOT_RESOURCE_RELOADING").toBoolean()) {
+        Directory(rootDir = "src/main/resources")
+      } else {
+        Classpath
+      }
+  }
+}
