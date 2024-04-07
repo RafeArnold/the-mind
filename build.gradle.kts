@@ -53,6 +53,10 @@ kotlin {
   jvmToolchain(20)
 }
 
+tasks.run.invoke {
+  environment("HOT_RESOURCE_RELOADING", true)
+}
+
 tasks.check {
   dependsOn("installKotlinterPrePushHook")
 }
@@ -99,8 +103,4 @@ task("buildTemplateVariants") {
       }
     }
   }
-}
-
-tasks.run.invoke {
-  environment("HOT_RESOURCE_RELOADING", true)
 }
