@@ -22,11 +22,7 @@
   </div>
   <div class="m-5 flex items-center justify-center">
     <div class="p-10 max-w-xl grow flex items-center justify-center rounded-3xl border-rose-800 border-2">
-      <div class="relative w-36 h-52 rounded-xl border-rose-800 border-4 bg-zinc-300 text-zinc-900">
-        {% if model.lastPlayedCard %}
-        <div class="absolute size-full flex items-center justify-center text-6xl font-extrabold" data-testid="last-played-card-value">{{model.lastPlayedCard}}</div><div class="absolute w-full px-1 font-semibold text-lg">{{model.lastPlayedCard}}</div>
-        {% endif %}
-      </div>
+      {{ card(model.lastPlayedCard, "border-rose-800", "last-played-card-value") }}
     </div>
   </div>
   <div class="m-5 flex items-center justify-evenly" data-testid="card-list">
@@ -34,23 +30,25 @@
       <input type="hidden" name="action" value="play">
       <button type="submit" class="relative w-1 min-h-80 flex items-center justify-evenly" data-testid="play-card-button">
         {% for value in model.cards | reverse %}
-        {{ card(value, loop.index, loop.length) }}
+        <div
+          class="absolute origin-bottom-left rotate-[{{transformation(loop.index, loop.length, 4)}}deg] translate-x-[{{transformation(loop.index, loop.length, 24)}}px]">
+          {{ card(value, "border-indigo-500", "card-value") }}
+        </div>
         {% endfor %}
       </button>
     </form>
   </div>
 </div>
 
-{% macro card(value, index, total) %}
-<div
-  class="absolute origin-bottom-left rotate-[{{transformation(index, total, 4)}}deg] translate-x-[{{transformation(index, total, 24)}}px]">
-  <div class="relative w-36 h-52 rounded-xl border-indigo-500 border-4 bg-zinc-300 text-zinc-900">
-    <div class="absolute size-full flex items-center justify-center text-6xl font-extrabold"
-         data-testid="card-value">{{value}}
-    </div>
-    <div class="absolute px-1 font-semibold text-lg">{{value}}</div>
+{% macro card(value, borderColour, cardValueTestId) %}
+<div class="relative w-36 h-52 rounded-xl {{borderColour}} border-4 bg-zinc-300 text-zinc-900">
+  {% if value %}
+  <div class="absolute size-full flex items-center justify-center text-6xl font-extrabold"
+       data-testid="{{cardValueTestId}}">{{value}}
   </div>
+  <div class="absolute px-1 font-semibold text-lg">{{value}}</div>
+  {% endif %}
 </div>
 {% endmacro %}
 
-{% macro transformation(index, total, n) %}{{n * index - n * (total - 1) / 2}}{% endmacro %}
+{% macro transformation(index, total, n) %}{{ (n * (index - ((total - 1.0) / 2))) | numberformat("#") }}{% endmacro %}
