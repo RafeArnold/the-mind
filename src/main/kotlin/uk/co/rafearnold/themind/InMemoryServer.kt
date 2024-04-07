@@ -67,7 +67,7 @@ class InMemoryServer(
           lives = gameConfig.startingLivesCount,
           stars = gameConfig.startingStarsCount,
           isVotingToThrowStar = false,
-          lastPlayedCardValue = null,
+          playedCards = mutableListOf(),
         )
     }
     game.triggerUpdate()
@@ -78,6 +78,8 @@ class InMemoryServer(
     val cards = connection.cards
     val removedCard = cards.minByOrNull { it.value }!!
     cards.remove(removedCard)
+    val removedCards: MutableList<Card> = mutableListOf()
+    removedCards.add(removedCard)
     val lowestCardValue =
       game.connections.flatMap { it.cards.map { card -> card.value } }.minOrNull() ?: Int.MAX_VALUE
     val playerCardsCounts =
@@ -96,11 +98,13 @@ class InMemoryServer(
           player.cards.removeAll(cardsToRemove)
           playerCardsCounts[player.player.id] =
             playerCardsCounts[player.player.id]!! - cardsToRemove.size
+          removedCards.addAll(cardsToRemove)
         }
       }
     }
+    removedCards.sortBy { it.value }
     game.connections.forEach {
-      it.lastPlayedCardValue = removedCard.value
+      it.playedCards.addAll(removedCards)
       it.resetVotes()
       for ((otherPlayerId, count) in playerCardsCounts
         .filter { (otherPlayerId, _) -> it.player.id != otherPlayerId }) {
@@ -115,11 +119,22 @@ class InMemoryServer(
     val (game, connection) = getGame(playerId = playerId)!!
     connection.isVotingToThrowStar = true
     if (game.connections.all { it.isVotingToThrowStar }) {
+      val removedCards: MutableList<Card> = mutableListOf()
       for (player in game.connections) {
         player.stars--
-        player.cards.apply { remove(minByOrNull { it.value }) }
+        val minCard = player.cards.minByOrNull { card -> card.value }
+        if (minCard != null) {
+          player.cards.remove(minCard)
+          removedCards.add(minCard)
+        }
         player.resetVotes()
         player.otherPlayers.forEach { it.cardCount = (it.cardCount - 1).coerceAtLeast(0) }
+      }
+      if (removedCards.isNotEmpty()) {
+        removedCards.sortBy { it.value }
+        for (player in game.connections) {
+          player.playedCards.addAll((player.playedCards.size - 2).coerceAtLeast(0), removedCards)
+        }
       }
       game.handlePossibleRoundComplete()
     } else {
@@ -174,7 +189,7 @@ class InMemoryServer(
           player.currentRound = nextRound
           player.cards = (1..nextRound).map { Card(deck.next()) }.toMutableList()
           player.otherPlayers.forEach { it.cardCount = nextRound }
-          player.lastPlayedCardValue = null
+          player.playedCards = mutableListOf()
         }
       }
     }
@@ -249,8 +264,8 @@ private var GameConnection.isVotingToThrowStar: Boolean
 private val GameConnection.otherPlayers: List<OtherPlayer>
   get() = (state as InGame).otherPlayers
 
-private var GameConnection.lastPlayedCardValue: Int?
-  get() = (state as InGame).lastPlayedCardValue
+private var GameConnection.playedCards: MutableList<Card>
+  get() = (state as InGame).playedCards
   set(value) {
-    (state as InGame).lastPlayedCardValue = value
+    (state as InGame).playedCards = value
   }

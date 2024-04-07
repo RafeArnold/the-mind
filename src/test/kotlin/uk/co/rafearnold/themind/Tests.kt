@@ -441,7 +441,7 @@ class TestSupportTests {
           lives = Random.nextInt(1, 3),
           stars = Random.nextInt(0, 2),
           isVotingToThrowStar = Random.nextBoolean(),
-          lastPlayedCardValue = null,
+          playedCards = mutableListOf(),
         ),
     )
 }

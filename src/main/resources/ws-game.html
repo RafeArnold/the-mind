@@ -21,8 +21,13 @@
     {% endfor %}
   </div>
   <div class="m-5 flex items-center justify-center">
-    <div class="p-10 max-w-xl grow flex items-center justify-center rounded-3xl border-rose-800 border-2">
-      {{ card(model.lastPlayedCard, "border-rose-800", "last-played-card-value") }}
+    <div class="group min-h-72 max-w-xl grow flex items-center justify-center rounded-3xl border-rose-800 border-2" data-testid="played-cards">
+      {% for value in model.playedCards %}
+      <div
+        class="transition ease-in-out group-hover:rotate-[{{transformation(loop.index, loop.length, 1)}}deg] group-hover:translate-x-[{{transformation(loop.index, loop.length, 32)}}px] duration-300 absolute origin-bottom-left">
+        {{ card(value, "border-rose-800") }}
+      </div>
+      {% endfor %}
     </div>
   </div>
   <div class="m-5 flex items-center justify-evenly" data-testid="card-list">
@@ -32,7 +37,7 @@
         {% for value in model.cards | reverse %}
         <div
           class="absolute origin-bottom-left rotate-[{{transformation(loop.index, loop.length, 4)}}deg] translate-x-[{{transformation(loop.index, loop.length, 24)}}px]">
-          {{ card(value, "border-indigo-500", "card-value") }}
+          {{ card(value, "border-indigo-500") }}
         </div>
         {% endfor %}
       </button>
@@ -40,12 +45,10 @@
   </div>
 </div>
 
-{% macro card(value, borderColour, cardValueTestId) %}
+{% macro card(value, borderColour) %}
 <div class="relative w-36 h-52 rounded-xl {{borderColour}} border-4 bg-zinc-300 text-zinc-900">
   {% if value %}
-  <div class="absolute size-full flex items-center justify-center text-6xl font-extrabold"
-       data-testid="{{cardValueTestId}}">{{value}}
-  </div>
+  <div class="absolute size-full flex items-center justify-center text-6xl font-extrabold" data-testid="card-value">{{value}}</div>
   <div class="absolute px-1 font-semibold text-lg">{{value}}</div>
   {% endif %}
 </div>

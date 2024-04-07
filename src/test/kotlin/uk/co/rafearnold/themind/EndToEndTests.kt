@@ -569,6 +569,63 @@ class EndToEndTests {
       it.assertHasNCards(2)
     }
   }
+
+  @Test
+  fun `all cards played in the round are displayed`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 2, startingStarsCount = 2))
+
+    val allPlayers = server.startNewGame(browser)
+
+    val expectedPlayedCards: MutableList<Int> = mutableListOf()
+    allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
+
+    // Complete first round.
+    repeat(2) {
+      allPlayers.nextPlayer().run {
+        expectedPlayedCards.add(minCardValue())
+        playCard(toCompleteRound = false)
+      }
+      allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
+    }
+    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    expectedPlayedCards.clear()
+    allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
+
+    // Throw a star.
+    allPlayers.sortedByMinCardValue().forEach {
+      expectedPlayedCards.add(it.minCardValue())
+      it.toggleVoteToThrowStar()
+    }
+    allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
+
+    // Play incorrect card.
+    expectedPlayedCards.add(allPlayers.sortedByMinCardValue()[0].minCardValue())
+    expectedPlayedCards.add(allPlayers.sortedByMinCardValue()[1].minCardValue())
+    allPlayers.sortedByMinCardValue()[1].playCard(toCompleteRound = false)
+    allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
+
+    // Complete second round.
+    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    expectedPlayedCards.clear()
+    allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
+
+    // Play a couple cards in the third round.
+    repeat(2) {
+      allPlayers.nextPlayer().run {
+        expectedPlayedCards.add(minCardValue())
+        playCard(toCompleteRound = false)
+      }
+      allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
+    }
+
+    // Throw a star.
+    allPlayers.sortedByMinCardValue().forEach {
+      // Voted out cards should be behind the last played card.
+      expectedPlayedCards.add(expectedPlayedCards.size - 2, it.minCardValue())
+      it.toggleVoteToThrowStar()
+    }
+    allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
+  }
 }
 
 private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
@@ -614,7 +671,7 @@ private fun PlayerContext.assertLastPlayedCardValueIs(value: Int?) {
 }
 
 private fun Page.assertLastPlayedCardValueIs(value: Int?) {
-  val cardValue = getByTestId("last-played-card-value")
+  val cardValue = playedCards().last()
   if (value != null) {
     assertThat(cardValue).hasCount(1)
     assertThat(cardValue).hasText(value.toString())
@@ -622,6 +679,16 @@ private fun Page.assertLastPlayedCardValueIs(value: Int?) {
     assertThat(cardValue).hasCount(0)
     assertThat(cardValue).not().isAttached()
   }
+}
+
+private fun PlayerContext.assertPlayedCardsAre(values: List<Int>) {
+  page.assertPlayedCardsAre(values = values)
+}
+
+private fun Page.assertPlayedCardsAre(values: List<Int>) {
+  val cardValues = playedCards()
+  assertThat(cardValues).hasCount(values.size)
+  assertThat(cardValues).hasText(values.map { it.toString() }.toTypedArray())
 }
 
 private fun PlayerContext.assertAllPlayersAre(names: List<String>) {
@@ -807,6 +874,8 @@ private fun Page.assertHasNCards(n: Int) {
   assertThat(cardList).hasCount(n)
   assertThat(cardList).hasText((1..n).map { cardValuePattern }.toTypedArray())
 }
+
+private fun Page.playedCards(): Locator = getByTestId("played-cards").getByTestId("card-value")
 
 private fun Page.cardList(): Locator = getByTestId("card-list").getByTestId("card-value")
 

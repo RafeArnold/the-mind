@@ -97,6 +97,7 @@ task("buildTemplateVariants") {
             "model" to mapOf(
               "otherPlayers" to listOf(mapOf("cardCount" to 11 + it)),
               "cards" to (1..11 + it).toList(),
+              "playedCards" to (1..99 + it).toList(),
             )
           )
         engine.getTemplate("ws-game.html").evaluate(writer, context)
