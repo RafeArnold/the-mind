@@ -483,6 +483,32 @@ class EndToEndTests {
     nextPlayer.playCard(toCompleteRound = false)
     allPlayers.forEach { p -> p.assertLastPlayedCardValueIs(nextPlayerMinCardValue) }
   }
+
+  @Test
+  fun `round number is displayed`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 1))
+
+    val allPlayers = server.startNewGame(browser)
+
+    allPlayers.forEach { it.assertRoundIs(1) }
+
+    repeat(2) {
+      allPlayers.nextPlayer().playCard(toCompleteRound = false)
+      allPlayers.forEach { it.assertRoundIs(1) }
+    }
+
+    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+
+    allPlayers.forEach { it.assertRoundIs(2) }
+    repeat(5) {
+      allPlayers.nextPlayer().playCard(toCompleteRound = false)
+      allPlayers.forEach { it.assertRoundIs(2) }
+    }
+
+    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+
+    allPlayers.forEach { it.assertRoundIs(3) }
+  }
 }
 
 private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
@@ -511,6 +537,16 @@ private fun PlayerContext.assertPlayerHasLeft(playerName: String) {
 
 private fun Page.assertPlayerHasLeft(playerName: String) {
   assertThat(playerLeftText()).hasText("$playerName left")
+}
+
+private fun PlayerContext.assertRoundIs(n: Int) {
+  page.assertRoundIs(n = n)
+}
+
+private fun Page.assertRoundIs(n: Int) {
+  val roundNumber = getByTestId("current-round-num")
+  assertThat(roundNumber).isVisible()
+  assertThat(roundNumber).hasText(n.toString())
 }
 
 private fun PlayerContext.assertLastPlayedCardValueIs(value: Int?) {

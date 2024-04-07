@@ -1,6 +1,6 @@
 <div id="connection-window">
   <div class="sticky top-0 z-10 p-5 flex items-center">
-    <div class="w-full text-center text-5xl">level {{model.currentRound}}</div>
+    <div class="w-full text-center text-5xl">level <span data-testid="current-round-num">{{model.currentRound}}</span></div>
     <div class="w-full text-center text-5xl"><i class="fa-solid fa-heart"></i> : <span data-testid="current-lives-count">{{model.currentLivesCount}}</span></div>
     <div class="w-full text-center text-5xl"><form ws-send><input type="hidden" name="action" value="vote"><button type="submit" class="transition ease-in-out {% if model.isVotingToThrowStar %}text-amber-500{% endif %} duration-300" data-testid="vote-to-throw-star-button" {% if model.currentThrowingStarsCount == 0 %}disabled{% endif %}><i class="fa-solid fa-star"></i></button> : <span data-testid="current-throwing-stars-count">{{model.currentThrowingStarsCount}}</span></form></div>
     {% include "leave-button.html" %}
