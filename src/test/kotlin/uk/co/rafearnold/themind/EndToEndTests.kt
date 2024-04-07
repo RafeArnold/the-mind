@@ -91,7 +91,7 @@ class EndToEndTests {
 
     // Some vote to throw star.
     val initialVotingPlayers = allPlayers.take(2)
-    initialVotingPlayers.forEach { it.voteToThrowStar() }
+    initialVotingPlayers.forEach { it.toggleVoteToThrowStar() }
 
     // Votes are visible to all players.
     allPlayers.forEach { p ->
@@ -112,7 +112,7 @@ class EndToEndTests {
     allPlayers.forEach { it.assertHasNThrowingStars(1) }
 
     // All vote.
-    allPlayers.forEach { it.voteToThrowStar() }
+    allPlayers.forEach { it.toggleVoteToThrowStar() }
 
     allPlayers.forEach { it.assertHasNThrowingStars(0) }
 
@@ -213,7 +213,7 @@ class EndToEndTests {
     allPlayers.forEach { it.assertHasNThrowingStars(1) }
     allPlayers.forEach { it.assertVoteButtonEnabled() }
 
-    allPlayers.forEach { it.voteToThrowStar() }
+    allPlayers.forEach { it.toggleVoteToThrowStar() }
 
     allPlayers.forEach { it.assertHasNThrowingStars(0) }
     allPlayers.forEach { it.assertVoteButtonDisabled() }
@@ -441,7 +441,7 @@ class EndToEndTests {
     }
 
     // Throw a star.
-    allPlayers.forEach { it.voteToThrowStar() }
+    allPlayers.forEach { it.toggleVoteToThrowStar() }
     expectedCounts = expectedCounts.mapValues { it.value - 1 }.toMutableMap()
     allPlayers.forEach { p ->
       p.assertOtherPlayerCardCountsAre(expectedCounts.filterKeys { p != it })
@@ -474,7 +474,7 @@ class EndToEndTests {
     allPlayers.forEach { p -> p.assertLastPlayedCardValueIs(nextPlayerMinCardValue) }
 
     // Throw a star.
-    allPlayers.forEach { it.voteToThrowStar() }
+    allPlayers.forEach { it.toggleVoteToThrowStar() }
     allPlayers.forEach { p -> p.assertLastPlayedCardValueIs(nextPlayerMinCardValue) }
 
     // Play the correct card.
@@ -508,6 +508,59 @@ class EndToEndTests {
     allPlayers.nextPlayer().playCard(toCompleteRound = true)
 
     allPlayers.forEach { it.assertRoundIs(3) }
+  }
+
+  @Test
+  fun `can revoke vote to throw star`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 1))
+
+    val allPlayers = server.startNewGame(browser)
+
+    allPlayers.forEach {
+      it.assertIsNotVoting()
+      it.assertOtherPlayersAreVoting(listOf())
+    }
+
+    allPlayers[0].toggleVoteToThrowStar()
+    allPlayers[0].assertIsVoting()
+    allPlayers[0].assertOtherPlayersAreVoting(listOf())
+    allPlayers.drop(1).forEach { it.assertOtherPlayersAreVoting(listOf(allPlayers[0].name)) }
+
+    allPlayers[0].toggleVoteToThrowStar()
+    allPlayers[0].assertIsNotVoting()
+    allPlayers.forEach { it.assertOtherPlayersAreVoting(listOf()) }
+
+    allPlayers.drop(1).forEach {
+      it.toggleVoteToThrowStar()
+      it.assertIsVoting()
+    }
+    allPlayers[0].assertOtherPlayersAreVoting(listOf(allPlayers[1].name, allPlayers[2].name))
+    allPlayers[1].assertOtherPlayersAreVoting(listOf(allPlayers[2].name))
+    allPlayers[2].assertOtherPlayersAreVoting(listOf(allPlayers[1].name))
+
+    allPlayers[1].toggleVoteToThrowStar()
+    allPlayers[1].assertIsNotVoting()
+    allPlayers.dropLast(1).forEach { it.assertOtherPlayersAreVoting(listOf(allPlayers[2].name)) }
+    allPlayers[2].assertOtherPlayersAreVoting(listOf())
+
+    allPlayers[0].toggleVoteToThrowStar()
+    allPlayers[0].assertIsVoting()
+    allPlayers[0].assertOtherPlayersAreVoting(listOf(allPlayers[2].name))
+    allPlayers[1].assertOtherPlayersAreVoting(listOf(allPlayers[0].name, allPlayers[2].name))
+    allPlayers[2].assertOtherPlayersAreVoting(listOf(allPlayers[0].name))
+
+    allPlayers.forEach {
+      it.assertRoundIs(1)
+      it.assertHasNCards(1)
+    }
+
+    allPlayers[1].toggleVoteToThrowStar()
+    allPlayers.forEach {
+      it.assertIsNotVoting()
+      it.assertOtherPlayersAreVoting(listOf())
+      it.assertRoundIs(2)
+      it.assertHasNCards(2)
+    }
   }
 }
 
@@ -643,6 +696,7 @@ private fun PlayerContext.assertIsVoting() {
 }
 
 private fun Page.assertIsVoting() {
+  assertThat(isVotingToThrowStarCheckbox()).isChecked()
   assertThat(voteToThrowStarButton()).hasCSS("color", "rgb(245, 158, 11)")
 }
 
@@ -651,6 +705,7 @@ private fun PlayerContext.assertIsNotVoting() {
 }
 
 private fun Page.assertIsNotVoting() {
+  assertThat(isVotingToThrowStarCheckbox()).not().isChecked()
   assertThat(voteToThrowStarButton()).hasCSS("color", "rgb(228, 228, 231)")
 }
 
@@ -667,15 +722,18 @@ private fun Page.assertOtherPlayersAreVoting(names: List<String>) {
   assertThat(playersVoting).hasText(names.toTypedArray())
 }
 
-private fun PlayerContext.voteToThrowStar() {
-  page.voteToThrowStar()
+private fun PlayerContext.toggleVoteToThrowStar() {
+  page.toggleVoteToThrowStar()
 }
 
-private fun Page.voteToThrowStar() {
+private fun Page.toggleVoteToThrowStar() {
   voteToThrowStarButton().click()
 }
 
 private fun Page.voteToThrowStarButton(): Locator = getByTestId("vote-to-throw-star-button")
+
+private fun Page.isVotingToThrowStarCheckbox(): Locator =
+  getByTestId("is-voting-to-throw-star-checkbox")
 
 private fun PlayerContext.assertHasLost() {
   page.assertHasLost()

@@ -150,6 +150,7 @@ class Listen(
             WsAction.StartGame -> Action.StartGame
             WsAction.PlayCard -> Action.PlayCard
             WsAction.VoteToThrowStar -> Action.VoteToThrowStar
+            WsAction.RevokeVoteToThrowStar -> Action.RevokeVoteToThrowStar
             WsAction.Heartbeat -> return@onMessage // Do nothing.
           }
         connection.receive(action)
@@ -198,6 +199,7 @@ private val actionLens: BiDiWsMessageLens<WsAction> = WsMessage.auto<WsAction>()
   JsonSubTypes.Type(value = WsAction.StartGame::class, name = "start"),
   JsonSubTypes.Type(value = WsAction.PlayCard::class, name = "play"),
   JsonSubTypes.Type(value = WsAction.VoteToThrowStar::class, name = "vote"),
+  JsonSubTypes.Type(value = WsAction.RevokeVoteToThrowStar::class, name = "revokeVote"),
   JsonSubTypes.Type(value = WsAction.Heartbeat::class, name = "heartbeat"),
 )
 private sealed interface WsAction {
@@ -206,6 +208,8 @@ private sealed interface WsAction {
   data object PlayCard : WsAction
 
   data object VoteToThrowStar : WsAction
+
+  data object RevokeVoteToThrowStar : WsAction
 
   data object Heartbeat : WsAction
 }

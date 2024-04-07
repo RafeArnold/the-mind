@@ -130,6 +130,15 @@ class InMemoryServer(
     game.triggerUpdate()
   }
 
+  override fun revokeVoteToThrowStar(playerId: String) {
+    val (game, connection) = getGame(playerId = playerId)!!
+    connection.isVotingToThrowStar = false
+    for (other in game.connections.filter { it.player.id != connection.player.id }) {
+      other.otherPlayers.first { it.id == connection.player.id }.isVotingToThrowStar = false
+    }
+    game.triggerUpdate()
+  }
+
   override fun leave(playerId: String) {
     val (game, connection) = getGame(playerId = playerId)!!
     game.connections.remove(connection)

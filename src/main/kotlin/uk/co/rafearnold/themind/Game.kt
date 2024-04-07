@@ -30,6 +30,8 @@ interface Server {
 
   fun voteToThrowStar(playerId: String)
 
+  fun revokeVoteToThrowStar(playerId: String)
+
   fun leave(playerId: String)
 }
 
@@ -46,6 +48,7 @@ data class GameConnection(
       Action.PlayCard -> server.playCard(playerId = player.id)
       Action.StartGame -> server.startGame(playerId = player.id)
       Action.VoteToThrowStar -> server.voteToThrowStar(playerId = player.id)
+      Action.RevokeVoteToThrowStar -> server.revokeVoteToThrowStar(playerId = player.id)
     }
   }
 
@@ -99,4 +102,6 @@ sealed interface Action {
   data object PlayCard : Action
 
   data object VoteToThrowStar : Action
+
+  data object RevokeVoteToThrowStar : Action
 }
