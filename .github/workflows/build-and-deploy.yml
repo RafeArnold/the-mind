@@ -40,13 +40,12 @@ jobs:
         with:
           name: app-image
           path: /tmp/the-mind.tar
-      - run: tar -czf /tmp/the-mind.tar.gz /tmp/the-mind.tar
       - uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
-          source: /tmp/the-mind.tar.gz
+          source: /tmp/the-mind.tar
           target: ~/projects/the-mind/
       - uses: appleboy/ssh-action@v1.0.3
         with:
