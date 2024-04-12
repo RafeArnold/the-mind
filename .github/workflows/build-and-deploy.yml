@@ -24,7 +24,7 @@ jobs:
           push: false
           tags: the-mind:latest
           context: .
-          outputs: type=docker,dest=/tmp/the-mind.tar
+          outputs: type=tar,dest=/tmp/the-mind.tar
       - uses: actions/upload-artifact@v4
         with:
           name: app-image
