@@ -40,14 +40,15 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: app-image
-          path: /tmp/
+          path: distfiles
       - uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
-          source: /tmp/the-mind.tar
+          source: distfiles/*
           target: ~/projects/the-mind/
+          strip_components: 1
       - uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
