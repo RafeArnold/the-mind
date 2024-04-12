@@ -40,7 +40,7 @@ jobs:
         with:
           name: app-image
           path: /tmp/the-mind.tar
-      - run: tar -czf the-mind.tar.gz the-mind.tar
+      - run: tar -czf /tmp/the-mind.tar.gz /tmp/the-mind.tar
       - uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.HOST }}
