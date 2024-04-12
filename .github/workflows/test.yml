@@ -1,5 +1,9 @@
 name: Run tests
-on: [push, workflow_call]
+on:
+  push:
+    branches-ignore:
+      - main
+  workflow_call:
 jobs:
   test:
     runs-on: ubuntu-latest
