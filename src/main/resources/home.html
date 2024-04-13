@@ -3,10 +3,10 @@
 {% block content %}
 <div hx-boost="true">
   <label>name: <input type="text" name="playerName" data-testid="player-name-input"></label>
-  <form method="post" action="./create" hx-include="input[name='playerName']">
+  <form method="post" action="/create" hx-include="input[name='playerName']">
     <input type="submit" value="create game" data-testid="create-game-button">
   </form>
-  <form method="post" action="./join" hx-include="input[name='playerName']">
+  <form method="post" action="/join" hx-include="input[name='playerName']">
     <label>join game: <input type="text" name="gameId" data-testid="join-game-game-id"></label>
     <input type="submit" value="join game" data-testid="join-game-button">
   </form>
