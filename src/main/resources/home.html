@@ -1,14 +1,37 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div hx-boost="true">
-  <label>name: <input type="text" name="playerName" data-testid="player-name-input"></label>
-  <form method="post" action="/create" hx-include="input[name='playerName']">
-    <input type="submit" value="create game" data-testid="create-game-button">
-  </form>
-  <form method="post" action="/join" hx-include="input[name='playerName']">
-    <label>join game: <input type="text" name="gameId" data-testid="join-game-game-id"></label>
-    <input type="submit" value="join game" data-testid="join-game-button">
-  </form>
+<div hx-boost="true" class="m-10 flex justify-center">
+  <div>
+    <h1 class="flex items-center justify-center text-5xl">the mind</h1>
+    <div class="mt-10 p-10 rounded-3xl border-indigo-500 border-2">
+      <div class="flex items-center justify-center">
+        <label>
+          <span class="sr-only">name</span>
+          <input type="text" name="playerName" placeholder="your name..." class="px-4 p-2 bg-zinc-200 rounded-lg text-zinc-900" data-testid="player-name-input">
+        </label>
+      </div>
+      <div class="mt-5 flex flex-wrap gap-5 justify-center">
+        <form method="post" action="/create" hx-include="input[name='playerName']">
+          <div class="h-full p-5 rounded-2xl border-indigo-500 border-2 text-center">
+            <div class="text-3xl">new game</div>
+            <button type="submit" class="mt-5 py-2 px-4 rounded-lg bg-indigo-500 text-center text-2xl" data-testid="create-game-button"><i class="fa-solid fa-play"></i></button>
+          </div>
+        </form>
+        <form method="post" action="/join" hx-include="input[name='playerName']">
+          <div class="p-5 rounded-2xl border-indigo-500 border-2 text-center">
+            <span class="text-3xl">join game</span>
+            <div class="flex p-5 gap-3 items-center justify-center">
+              <label>
+                <span class="sr-only">game code</span>
+                <input type="text" name="gameId" placeholder="game code..." class="w-32 h-12 px-4 p-2 bg-zinc-700 rounded-lg text-zinc-200" data-testid="join-game-game-id">
+              </label>
+              <button type="submit" class="h-12 py-2 px-4 rounded-lg bg-indigo-500 text-center text-2xl" data-testid="create-game-button"><i class="fa-solid fa-play"></i></button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
