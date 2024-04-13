@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import org.http4k.core.Body
 import org.http4k.core.ContentType
+import org.http4k.core.Filter
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
 import org.http4k.core.Request
@@ -18,7 +19,6 @@ import org.http4k.core.cookie.SameSite
 import org.http4k.core.cookie.cookie
 import org.http4k.core.then
 import org.http4k.core.with
-import org.http4k.filter.ServerFilters
 import org.http4k.format.Jackson.auto
 import org.http4k.lens.BiDiBodyLens
 import org.http4k.lens.BiDiWsMessageLens
@@ -61,9 +61,16 @@ fun startServer(
     )
   val app =
     PolyHandler(
-      ServerFilters.CatchAll { e ->
-        logger.error("Error caught handling request", e)
-        Response(Status.INTERNAL_SERVER_ERROR)
+      Filter { next ->
+        {
+          try {
+            logger.info("Request received: ${it.method} ${it.uri}")
+            next(it)
+          } catch (e: Throwable) {
+            logger.error("Error caught handling request", e)
+            Response(Status.INTERNAL_SERVER_ERROR)
+          }
+        }
       }.then(router),
       WsFilter { next ->
         {
