@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div hx-ext="ws" ws-connect="./listen">
+<div hx-ext="ws" ws-connect="/listen">
   <form ws-send hx-trigger="every 10s">
     <input type="hidden" name="action" value="heartbeat">
   </form>
