@@ -1,8 +1,8 @@
 <div id="connection-window">
-  <div class="sticky top-0 z-10 p-5 flex items-center">
-    <div class="w-full text-center text-5xl">level <span data-testid="current-round-num">{{model.currentRound}}</span></div>
-    <div class="w-full text-center text-5xl"><i class="fa-solid fa-heart"></i> : <span data-testid="current-lives-count">{{model.currentLivesCount}}</span></div>
-    <div class="w-full text-center text-5xl"><form ws-send><input type="checkbox" hidden {% if model.isVotingToThrowStar %}checked{% endif %} class="peer" data-testid="is-voting-to-throw-star-checkbox"><input type="hidden" name="action" value="{% if model.isVotingToThrowStar %}revokeVote{% else %}vote{% endif %}"><button type="submit" class="transition ease-in-out peer-checked:text-amber-500 duration-300" data-testid="vote-to-throw-star-button" {% if model.currentThrowingStarsCount == 0 %}disabled{% endif %}><i class="fa-solid fa-star"></i></button> : <span data-testid="current-throwing-stars-count">{{model.currentThrowingStarsCount}}</span></form></div>
+  <div class="sticky top-0 z-10 p-5 flex items-center justify-between">
+    <div class="text-center text-3xl sm:text-5xl">level <span data-testid="current-round-num">{{model.currentRound}}</span></div>
+    <div class="text-center text-3xl sm:text-5xl"><i class="fa-solid fa-heart"></i> : <span data-testid="current-lives-count">{{model.currentLivesCount}}</span></div>
+    <div class="text-center text-3xl sm:text-5xl"><form ws-send><input type="checkbox" hidden {% if model.isVotingToThrowStar %}checked{% endif %} class="peer" data-testid="is-voting-to-throw-star-checkbox"><input type="hidden" name="action" value="{% if model.isVotingToThrowStar %}revokeVote{% else %}vote{% endif %}"><button type="submit" class="transition ease-in-out peer-checked:text-amber-500 duration-300" data-testid="vote-to-throw-star-button" {% if model.currentThrowingStarsCount == 0 %}disabled{% endif %}><i class="fa-solid fa-star"></i></button> : <span data-testid="current-throwing-stars-count">{{model.currentThrowingStarsCount}}</span></form></div>
     {% include "leave-button.html" %}
   </div>
   <div class="mx-5 flex flex-wrap gap-5 justify-center" data-testid="other-players">
