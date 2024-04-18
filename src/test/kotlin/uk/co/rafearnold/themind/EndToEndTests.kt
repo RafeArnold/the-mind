@@ -633,10 +633,7 @@ private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
   players.forEach {
     // Ensure everything is self-hosted by killing all requests outside the local server.
     it.page.context()
-      .route(Pattern.compile("^(?!http://localhost:${port()}).*")) { route ->
-        println(route.request().method() + " " + route.request().url())
-        route.abort()
-      }
+      .route(Pattern.compile("^(?!http://localhost:${port()}).*")) { route -> route.abort() }
     it.navigateToHome(port = port())
   }
   val gameId: String = players[0].createGame()
