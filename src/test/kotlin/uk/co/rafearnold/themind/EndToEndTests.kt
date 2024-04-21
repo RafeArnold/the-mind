@@ -47,7 +47,7 @@ class EndToEndTests {
 
   @Test
   fun `complete full game`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
     val allPlayers = server.startNewGame(browser)
 
     allPlayers.forEach { it.assertHasNCards(1) }
@@ -65,7 +65,7 @@ class EndToEndTests {
 
   @Test
   fun `lose a game`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
     val allPlayers = server.startNewGame(browser)
 
     allPlayers.forEach { it.assertHasNLives(1) }
@@ -78,7 +78,7 @@ class EndToEndTests {
 
   @Test
   fun `throw a star`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 1))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 1))
     val allPlayers = server.startNewGame(browser)
 
     allPlayers.forEach { it.assertHasNThrowingStars(1) }
@@ -129,7 +129,7 @@ class EndToEndTests {
 
   @Test
   fun `lose a life when incorrect card is played`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 3, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 3, startingStarsCount = 0))
     val allPlayers = server.startNewGame(browser)
 
     allPlayers.forEach { it.assertHasNLives(3) }
@@ -147,7 +147,7 @@ class EndToEndTests {
 
   @Test
   fun `can refresh in lobby`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers = browser.createPlayerContexts(3)
     allPlayers.forEach { it.navigateToHome(port = server.port()) }
@@ -165,7 +165,7 @@ class EndToEndTests {
 
   @Test
   fun `can refresh in game`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers = server.startNewGame(browser)
 
@@ -186,7 +186,7 @@ class EndToEndTests {
 
   @Test
   fun `can refresh after game won`() {
-    server = startServer(GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers = server.startNewGame(browser)
     repeat(2) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
@@ -200,7 +200,7 @@ class EndToEndTests {
 
   @Test
   fun `can refresh after game lost`() {
-    server = startServer(GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers = server.startNewGame(browser)
     allPlayers.first { it != allPlayers.nextPlayer() }.playCard(toCompleteRound = true)
@@ -213,7 +213,7 @@ class EndToEndTests {
 
   @Test
   fun `vote button is disabled when no throwing stars available`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 1))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 1))
 
     val allPlayers = server.startNewGame(browser)
 
@@ -228,7 +228,7 @@ class EndToEndTests {
 
   @Test
   fun `all players in lobby are displayed`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers: List<PlayerContext> = browser.createPlayerContexts(3)
     allPlayers.forEach { it.navigateToHome(port = server.port()) }
@@ -246,7 +246,7 @@ class EndToEndTests {
 
   @Test
   fun `other players in game are displayed`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers = server.startNewGame(browser)
 
@@ -257,7 +257,7 @@ class EndToEndTests {
 
   @Test
   fun `connecting as unidentified player goes to home`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
 
     val cookieName = "themind_playerid"
 
@@ -291,7 +291,7 @@ class EndToEndTests {
 
   @Test
   fun `can leave lobby`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers: List<PlayerContext> = browser.createPlayerContexts(3)
     allPlayers.forEach { it.navigateToHome(port = server.port()) }
@@ -317,7 +317,7 @@ class EndToEndTests {
 
   @Test
   fun `new host is assigned when host leaves lobby`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers: List<PlayerContext> = browser.createPlayerContexts(3)
     allPlayers.forEach { it.navigateToHome(port = server.port()) }
@@ -338,7 +338,7 @@ class EndToEndTests {
 
   @Test
   fun `last player can leave lobby`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers: List<PlayerContext> = browser.createPlayerContexts(3)
     allPlayers.forEach { it.navigateToHome(port = server.port()) }
@@ -352,7 +352,7 @@ class EndToEndTests {
 
   @Test
   fun `can leave game which ends game for all`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers = server.startNewGame(browser)
 
@@ -378,7 +378,7 @@ class EndToEndTests {
 
   @Test
   fun `can leave after game won`() {
-    server = startServer(GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers = server.startNewGame(browser)
 
@@ -396,7 +396,7 @@ class EndToEndTests {
 
   @Test
   fun `can leave after game lost`() {
-    server = startServer(GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0))
+    server = startServer(gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers = server.startNewGame(browser)
 
@@ -413,7 +413,7 @@ class EndToEndTests {
 
   @Test
   fun `other player card counts are displayed`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 2, startingStarsCount = 1))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 2, startingStarsCount = 1))
 
     val allPlayers = server.startNewGame(browser)
 
@@ -457,7 +457,7 @@ class EndToEndTests {
 
   @Test
   fun `last played card is displayed`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 2, startingStarsCount = 1))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 2, startingStarsCount = 1))
 
     val allPlayers = server.startNewGame(browser)
 
@@ -493,7 +493,7 @@ class EndToEndTests {
 
   @Test
   fun `round number is displayed`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 1))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 1))
 
     val allPlayers = server.startNewGame(browser)
 
@@ -519,7 +519,7 @@ class EndToEndTests {
 
   @Test
   fun `can revoke vote to throw star`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 1))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 1))
 
     val allPlayers = server.startNewGame(browser)
 
@@ -572,7 +572,7 @@ class EndToEndTests {
 
   @Test
   fun `all cards played in the round are displayed`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 2, startingStarsCount = 2))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 2, startingStarsCount = 2))
 
     val allPlayers = server.startNewGame(browser)
 
@@ -629,7 +629,7 @@ class EndToEndTests {
 
   @Test
   fun `can not start a game with less than 2 players`() {
-    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 2, startingStarsCount = 2))
+    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 2, startingStarsCount = 2))
 
     val players = browser.createPlayerContexts(2)
     val player1 = players[0]
@@ -651,6 +651,17 @@ class EndToEndTests {
     players.forEach { it.assertRoundIs(1) }
   }
 }
+
+private fun startServer(gameConfig: GameConfig) = startServer(InMemoryServer(gameConfig))
+
+private fun gameConfig(
+  roundCount: Int,
+  startingLivesCount: Int,
+  startingStarsCount: Int,
+): GameConfig =
+  GameConfig(roundCount = roundCount, startingStarsCount = startingStarsCount) {
+    startingLivesCount
+  }
 
 private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
   val players: List<PlayerContext> = browser.createPlayerContexts(3)

@@ -14,7 +14,7 @@ class Tests {
   fun `all cards played in correct order`() {
     val server =
       InMemoryServer(
-        gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
+        gameConfig = gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
       )
     val host = server.createGame()
     val gameId = host.gameId
@@ -53,7 +53,7 @@ class Tests {
   fun `card played in wrong order`() {
     val server =
       InMemoryServer(
-        gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
+        gameConfig = gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
       )
     val host = server.createGame()
     val gameId = host.gameId
@@ -74,7 +74,7 @@ class Tests {
   fun `all cards played in correct order with multiple rounds`() {
     val server =
       InMemoryServer(
-        gameConfig = GameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0),
+        gameConfig = gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0),
       )
     val host = server.createGame()
     val gameId = host.gameId
@@ -101,7 +101,7 @@ class Tests {
   fun `cards played in wrong order with multiple rounds and multiple lives`() {
     val server =
       InMemoryServer(
-        gameConfig = GameConfig(roundCount = 3, startingLivesCount = 3, startingStarsCount = 0),
+        gameConfig = gameConfig(roundCount = 3, startingLivesCount = 3, startingStarsCount = 0),
       )
     val host = server.createGame()
     val gameId = host.gameId
@@ -139,7 +139,7 @@ class Tests {
   fun `star thrown`() {
     val server =
       InMemoryServer(
-        gameConfig = GameConfig(roundCount = 2, startingLivesCount = 1, startingStarsCount = 2),
+        gameConfig = gameConfig(roundCount = 2, startingLivesCount = 1, startingStarsCount = 2),
       )
     val host = server.createGame()
     val gameId = host.gameId
@@ -207,7 +207,7 @@ class Tests {
   fun `playing a card resets votes to throw star`() {
     val server =
       InMemoryServer(
-        gameConfig = GameConfig(roundCount = 2, startingLivesCount = 1, startingStarsCount = 1),
+        gameConfig = gameConfig(roundCount = 2, startingLivesCount = 1, startingStarsCount = 1),
       )
     val host = server.createGame()
     val gameId = host.gameId
@@ -244,7 +244,7 @@ class Tests {
   fun `leave lobby`() {
     val server =
       InMemoryServer(
-        gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 1),
+        gameConfig = gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 1),
       )
     val host = server.createGame()
     val gameId = host.gameId
@@ -268,7 +268,7 @@ class Tests {
   fun `leave game`() {
     val server =
       InMemoryServer(
-        gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 1),
+        gameConfig = gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 1),
       )
     val host = server.createGame()
     val gameId = host.gameId
@@ -304,7 +304,7 @@ class Tests {
   fun `game ids are a reasonable format`() {
     val server =
       InMemoryServer(
-        gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 1),
+        gameConfig = gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 1),
       )
     repeat(10) { assertTrue(server.createGame().gameId.matches(Regex("[A-Z0-9]{2}"))) }
   }
@@ -313,7 +313,7 @@ class Tests {
   fun `game id is case insensitive when joining game`() {
     val server =
       InMemoryServer(
-        gameConfig = GameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
+        gameConfig = gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
       )
 
     val host = server.createGame()
@@ -325,7 +325,31 @@ class Tests {
       host.lobbyState.allPlayers.map { it.name },
     )
   }
+
+  @Test
+  fun `starting lives are determined by player count`() {
+    val server = InMemoryServer()
+
+    repeat(99) {
+      val playerCount = it + 2
+      val host = server.createGame()
+      val otherPlayers = List(playerCount - 1) { server.joinGame(gameId = host.gameId) }
+
+      server.startGame(host)
+
+      (otherPlayers + host).forEach { player -> assertEquals(playerCount, player.lives) }
+    }
+  }
 }
+
+private fun gameConfig(
+  roundCount: Int,
+  startingLivesCount: Int,
+  startingStarsCount: Int,
+): GameConfig =
+  GameConfig(roundCount = roundCount, startingStarsCount = startingStarsCount) {
+    startingLivesCount
+  }
 
 private fun Server.createGame(): GameConnection =
   createGame(playerName = UUID.randomUUID().toString())
@@ -425,7 +449,7 @@ class TestSupportTests {
 
   private fun createInGamePlayer(vararg cardValues: Int): GameConnection =
     GameConnection(
-      server = InMemoryServer(GameConfig(0, 0, 0)),
+      server = InMemoryServer(),
       gameId = UUID.randomUUID().toString(),
       player =
         Player(

@@ -6,5 +6,5 @@ import org.slf4j.LoggerFactory
 val logger: Logger = LoggerFactory.getLogger("Main")
 
 fun main() {
-  startServer(GameConfig(12, 3, 1)).block()
+  startServer().block()
 }
