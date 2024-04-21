@@ -192,6 +192,10 @@ class InMemoryServer(
           player.cards = (1..nextRound).map { Card(deck.next()) }.toMutableList()
           player.otherPlayers.forEach { it.cardCount = nextRound }
           player.playedCards = mutableListOf()
+          when (currentRound) {
+            2, 5, 8 -> player.stars++
+            3, 6, 9 -> player.lives++
+          }
         }
       }
     }

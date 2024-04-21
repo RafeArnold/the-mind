@@ -377,6 +377,84 @@ class Tests {
     }
     allPlayers.forEach { assertEquals(GameWon, it.state) }
   }
+
+  @Test
+  fun `rewards are given after certain rounds`() {
+    val server = InMemoryServer()
+
+    val host = server.createGame()
+    val otherPlayers = List(1) { server.joinGame(gameId = host.gameId) }
+    val allPlayers = listOf(host) + otherPlayers
+
+    fun assertCountsEqual(
+      lives: Int,
+      stars: Int,
+    ) {
+      allPlayers.forEach {
+        assertEquals(lives, it.lives)
+        assertEquals(stars, it.stars)
+      }
+    }
+
+    server.startGame(host)
+
+    assertCountsEqual(lives = 2, stars = 1)
+
+    // No reward after round 1.
+    repeat(2) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { assertEquals(2, it.currentRound) }
+    assertCountsEqual(lives = 2, stars = 1)
+
+    // Star after round 2.
+    repeat(4) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { assertEquals(3, it.currentRound) }
+    assertCountsEqual(lives = 2, stars = 2)
+
+    // Life after round 3.
+    repeat(6) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { assertEquals(4, it.currentRound) }
+    assertCountsEqual(lives = 3, stars = 2)
+
+    // No reward after round 4.
+    repeat(8) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { assertEquals(5, it.currentRound) }
+    assertCountsEqual(lives = 3, stars = 2)
+
+    // Star after round 5.
+    repeat(10) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { assertEquals(6, it.currentRound) }
+    assertCountsEqual(lives = 3, stars = 3)
+
+    // Life after round 6.
+    repeat(12) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { assertEquals(7, it.currentRound) }
+    assertCountsEqual(lives = 4, stars = 3)
+
+    // No reward after round 7.
+    repeat(14) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { assertEquals(8, it.currentRound) }
+    assertCountsEqual(lives = 4, stars = 3)
+
+    // Star after round 8.
+    repeat(16) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { assertEquals(9, it.currentRound) }
+    assertCountsEqual(lives = 4, stars = 4)
+
+    // Life after round 9.
+    repeat(18) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { assertEquals(10, it.currentRound) }
+    assertCountsEqual(lives = 5, stars = 4)
+
+    // No reward after round 10.
+    repeat(20) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { assertEquals(11, it.currentRound) }
+    assertCountsEqual(lives = 5, stars = 4)
+
+    // No reward after round 11.
+    repeat(22) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { assertEquals(12, it.currentRound) }
+    assertCountsEqual(lives = 5, stars = 4)
+  }
 }
 
 private fun gameConfig(
