@@ -3,7 +3,11 @@
     <div class="text-center text-xl sm:text-5xl">game code : <b class="pl-2 text-3xl tracking-[0.25em]" data-testid="game-id">{{model.gameId}}</b></div>
     {% include "leave-button.html" %}
   </div>
-  {% include "all-players.html" %}
+  <ul class="m-10 mt-5 p-5 max-w-xl rounded-2xl border-indigo-500 border-2" data-testid="all-players">
+    {% for playerName in model.allPlayers %}
+    <li data-testid="player-name" class="truncate">{{ playerName }}</li>
+    {% endfor %}
+  </ul>
   {% if model.isHost %}
   <form ws-send>
     <input type="hidden" name="action" value="start">
