@@ -340,6 +340,18 @@ class Tests {
       (otherPlayers + host).forEach { player -> assertEquals(playerCount, player.lives) }
     }
   }
+
+  @Test
+  fun `starting stars count is 1`() {
+    val server = InMemoryServer()
+
+    val host = server.createGame()
+    val otherPlayers = List(2) { server.joinGame(gameId = host.gameId) }
+
+    server.startGame(host)
+
+    (otherPlayers + host).forEach { player -> assertEquals(1, player.stars) }
+  }
 }
 
 private fun gameConfig(
