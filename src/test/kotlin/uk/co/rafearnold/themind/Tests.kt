@@ -1,5 +1,7 @@
 package uk.co.rafearnold.themind
 
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import java.util.UUID
 import kotlin.random.Random
 import kotlin.test.Test
@@ -340,6 +342,41 @@ class Tests {
       (otherPlayers + host).forEach { player -> assertEquals(playerCount, player.lives) }
     }
   }
+
+  @Test
+  fun `starting stars count is 1`() {
+    val server = InMemoryServer()
+
+    val host = server.createGame()
+    val otherPlayers = List(2) { server.joinGame(gameId = host.gameId) }
+
+    server.startGame(host)
+
+    (otherPlayers + host).forEach { player -> assertEquals(1, player.stars) }
+  }
+
+  @ParameterizedTest
+  @CsvSource("1,12", "2,12", "3,10", "4,8", "5,8", "6,8")
+  fun `total round count is determined by the number of players`(
+    playerCount: Int,
+    expectedRoundCount: Int,
+  ) {
+    val server = InMemoryServer()
+
+    val host = server.createGame()
+    val otherPlayers = List(playerCount - 1) { server.joinGame(gameId = host.gameId) }
+    val allPlayers = listOf(host) + otherPlayers
+
+    server.startGame(host)
+
+    repeat(expectedRoundCount) { roundIndex ->
+      allPlayers.forEach { assertEquals(roundIndex + 1, it.currentRound) }
+      repeat((roundIndex + 1) * allPlayers.size) {
+        server.playCard(allPlayers.nextPlayer())
+      }
+    }
+    allPlayers.forEach { assertEquals(GameWon, it.state) }
+  }
 }
 
 private fun gameConfig(
@@ -347,7 +384,7 @@ private fun gameConfig(
   startingLivesCount: Int,
   startingStarsCount: Int,
 ): GameConfig =
-  GameConfig(roundCount = roundCount, startingStarsCount = startingStarsCount) {
+  GameConfig(roundCount = { roundCount }, startingStarsCount = startingStarsCount) {
     startingLivesCount
   }
 
@@ -400,6 +437,9 @@ private fun List<GameConnection>.assertNoDuplicateCards() {
 private val GameConnection.lobbyState: InLobby get() = state as InLobby
 
 private val GameConnection.inGameState: InGame get() = state as InGame
+
+private val GameConnection.currentRound: Int
+  get() = (state as InGame).currentRound
 
 private var GameConnection.cards: MutableList<Card>
   get() = (state as InGame).cards
@@ -461,6 +501,7 @@ class TestSupportTests {
         InGame(
           otherPlayers = mutableListOf(),
           currentRound = 1,
+          roundCount = 1,
           cards = cardValues.map { Card(value = it) }.shuffled().toMutableList(),
           lives = Random.nextInt(1, 3),
           stars = Random.nextInt(0, 2),

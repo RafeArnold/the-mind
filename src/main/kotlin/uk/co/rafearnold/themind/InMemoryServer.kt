@@ -64,6 +64,7 @@ class InMemoryServer(
               }
               .toMutableList(),
           currentRound = 1,
+          roundCount = gameConfig.roundCount(inLobbyState),
           cards = mutableListOf(Card(deck.next())),
           lives = gameConfig.startingLivesCount(inLobbyState),
           stars = gameConfig.startingStarsCount,
@@ -181,7 +182,7 @@ class InMemoryServer(
     if (connections.all { it.cards.isEmpty() }) {
       // Round complete.
       val currentRound = connections.first().currentRound
-      if (currentRound == gameConfig.roundCount) {
+      if (currentRound == connections.first().roundCount) {
         setState(GameWon)
       } else {
         val nextRound = currentRound + 1
@@ -237,6 +238,9 @@ private var GameConnection.currentRound: Int
   set(value) {
     (state as InGame).currentRound = value
   }
+
+private val GameConnection.roundCount: Int
+  get() = (state as InGame).roundCount
 
 private var GameConnection.cards: MutableList<Card>
   get() = (state as InGame).cards
