@@ -626,6 +626,30 @@ class EndToEndTests {
     }
     allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
   }
+
+  @Test
+  fun `can not start a game with less than 2 players`() {
+    server = startServer(GameConfig(roundCount = 3, startingLivesCount = 2, startingStarsCount = 2))
+
+    val players = browser.createPlayerContexts(2)
+    val player1 = players[0]
+    player1.navigateToHome(port = server.port())
+    val gameId = player1.createGame()
+
+    val startGameButton = player1.page.startGameButton()
+    assertThat(startGameButton).isVisible()
+    assertThat(startGameButton).isDisabled()
+
+    val player2 = players[1]
+    player2.navigateToHome(port = server.port())
+    player2.joinGame(gameId = gameId)
+
+    assertThat(startGameButton).isVisible()
+    assertThat(startGameButton).isEnabled()
+
+    player1.startGame()
+    players.forEach { it.assertRoundIs(1) }
+  }
 }
 
 private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
