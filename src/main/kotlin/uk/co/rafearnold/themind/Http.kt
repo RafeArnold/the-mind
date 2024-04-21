@@ -43,14 +43,13 @@ import org.http4k.websocket.then
 import org.http4k.routing.ws.bind as wsBind
 
 fun startServer(
-  gameConfig: GameConfig,
+  gameServer: Server = InMemoryServer(),
   port: Int = 8080,
 ): Http4kServer {
   val templateRenderer = PebbleTemplateRenderer()
   val view: BiDiBodyLens<ViewModel> =
     Body.viewModel(templateRenderer, ContentType.TEXT_HTML).toLens()
   val wsView: BiDiWsMessageLens<ViewModel> = WsMessage.viewModel(templateRenderer).toLens()
-  val gameServer = InMemoryServer(gameConfig = gameConfig)
   val router =
     routes(
       Assets(),

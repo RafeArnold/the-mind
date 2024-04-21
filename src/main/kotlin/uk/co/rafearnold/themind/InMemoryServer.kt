@@ -3,7 +3,7 @@ package uk.co.rafearnold.themind
 import java.util.UUID
 
 class InMemoryServer(
-  private val gameConfig: GameConfig,
+  private val gameConfig: GameConfig = GameConfig(),
   private val gameIdGenerator: GameIdGenerator = SqidsGameIdGenerator(),
 ) : Server {
 
@@ -53,10 +53,11 @@ class InMemoryServer(
     val (game, _) = getGame(playerId = playerId)!!
     val deck = shuffledDeck()
     for (player in game.connections) {
+      val inLobbyState = player.state as InLobby
       player.state =
         InGame(
           otherPlayers =
-            (player.state as InLobby).allPlayers
+            inLobbyState.allPlayers
               .filter { it.id != player.player.id }
               .map {
                 OtherPlayer(id = it.id, name = it.name, isVotingToThrowStar = false, cardCount = 1)
@@ -64,7 +65,7 @@ class InMemoryServer(
               .toMutableList(),
           currentRound = 1,
           cards = mutableListOf(Card(deck.next())),
-          lives = gameConfig.startingLivesCount,
+          lives = gameConfig.startingLivesCount(inLobbyState),
           stars = gameConfig.startingStarsCount,
           isVotingToThrowStar = false,
           playedCards = mutableListOf(),

@@ -94,7 +94,11 @@ data class PlayerLeft(val playerName: String) : GameState
 
 data class Card(val value: Int)
 
-data class GameConfig(val roundCount: Int, val startingLivesCount: Int, val startingStarsCount: Int)
+data class GameConfig(
+  val roundCount: Int = 12,
+  val startingStarsCount: Int = 1,
+  val startingLivesCount: (InLobby) -> Int = { it.allPlayers.size },
+)
 
 sealed interface Action {
   data object StartGame : Action
