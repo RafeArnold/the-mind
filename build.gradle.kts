@@ -42,6 +42,7 @@ dependencies {
   implementation("ch.qos.logback:logback-classic:1.4.12")
 
   testImplementation(kotlin("test"))
+  testImplementation("org.junit.jupiter:junit-jupiter-params")
   testImplementation("com.microsoft.playwright:playwright:1.41.2")
 }
 

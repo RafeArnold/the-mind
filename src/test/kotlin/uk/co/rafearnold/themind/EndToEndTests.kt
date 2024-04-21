@@ -659,7 +659,7 @@ private fun gameConfig(
   startingLivesCount: Int,
   startingStarsCount: Int,
 ): GameConfig =
-  GameConfig(roundCount = roundCount, startingStarsCount = startingStarsCount) {
+  GameConfig(roundCount = { roundCount }, startingStarsCount = startingStarsCount) {
     startingLivesCount
   }
 

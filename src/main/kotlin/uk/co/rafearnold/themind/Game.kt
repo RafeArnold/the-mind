@@ -79,6 +79,7 @@ data class InLobby(
 data class InGame(
   val otherPlayers: MutableList<OtherPlayer>,
   var currentRound: Int,
+  var roundCount: Int,
   var cards: MutableList<Card>,
   var lives: Int,
   var stars: Int,
@@ -95,7 +96,13 @@ data class PlayerLeft(val playerName: String) : GameState
 data class Card(val value: Int)
 
 data class GameConfig(
-  val roundCount: Int = 12,
+  val roundCount: (InLobby) -> Int = {
+    when (it.allPlayers.size) {
+      1, 2 -> 12
+      3 -> 10
+      else -> 8
+    }
+  },
   val startingStarsCount: Int = 1,
   val startingLivesCount: (InLobby) -> Int = { it.allPlayers.size },
 )
