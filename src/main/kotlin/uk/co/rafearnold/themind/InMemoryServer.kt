@@ -70,6 +70,7 @@ class InMemoryServer(
           stars = gameConfig.startingStarsCount,
           isVotingToThrowStar = false,
           playedCards = mutableListOf(),
+          levelReward = LevelReward.NONE,
         )
     }
     game.triggerUpdate()
@@ -196,6 +197,11 @@ class InMemoryServer(
             2, 5, 8 -> player.stars++
             3, 6, 9 -> player.lives++
           }
+          when (nextRound) {
+            2, 5, 8 -> player.levelReward = LevelReward.STAR
+            3, 6, 9 -> player.levelReward = LevelReward.LIFE
+            else -> player.levelReward = LevelReward.NONE
+          }
         }
       }
     }
@@ -277,4 +283,10 @@ private var GameConnection.playedCards: MutableList<Card>
   get() = (state as InGame).playedCards
   set(value) {
     (state as InGame).playedCards = value
+  }
+
+private var GameConnection.levelReward: LevelReward
+  get() = (state as InGame).levelReward
+  set(value) {
+    (state as InGame).levelReward = value
   }

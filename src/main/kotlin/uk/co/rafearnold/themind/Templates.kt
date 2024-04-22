@@ -42,6 +42,7 @@ data class GameViewModel(
   override val cards: List<Int>,
   override val isVotingToThrowStar: Boolean,
   override val playedCards: List<Int>,
+  override val levelReward: LevelReward,
 ) : GameView, ViewModel {
   override fun template(): String = "game"
 }
@@ -54,6 +55,7 @@ data class WsGameViewModel(
   override val cards: List<Int>,
   override val isVotingToThrowStar: Boolean,
   override val playedCards: List<Int>,
+  override val levelReward: LevelReward,
 ) : GameView, ViewModel {
   override fun template(): String = "ws-game"
 }
@@ -68,6 +70,7 @@ interface GameView {
   val cards: List<Int>
   val isVotingToThrowStar: Boolean
   val playedCards: List<Int>
+  val levelReward: LevelReward
 }
 
 object GameWonViewModel : ViewModel {

@@ -650,6 +650,59 @@ class EndToEndTests {
     player1.startGame()
     players.forEach { it.assertRoundIs(1) }
   }
+
+  @Test
+  fun `level reward is displayed`() {
+    server = startServer()
+
+    val allPlayers = server.startNewGame(browser)
+
+    allPlayers.forEach {
+      it.assertHasNLives(3)
+      it.assertHasNThrowingStars(1)
+      it.assertLevelRewardIs(LevelReward.NONE)
+    }
+
+    repeat(2) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
+    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+
+    allPlayers.forEach {
+      it.assertRoundIs(2)
+      it.assertHasNLives(3)
+      it.assertHasNThrowingStars(1)
+      it.assertLevelRewardIs(LevelReward.STAR)
+    }
+
+    repeat(5) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
+    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+
+    allPlayers.forEach {
+      it.assertRoundIs(3)
+      it.assertHasNLives(3)
+      it.assertHasNThrowingStars(2)
+      it.assertLevelRewardIs(LevelReward.LIFE)
+    }
+
+    repeat(8) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
+    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+
+    allPlayers.forEach {
+      it.assertRoundIs(4)
+      it.assertHasNLives(4)
+      it.assertHasNThrowingStars(2)
+      it.assertLevelRewardIs(LevelReward.NONE)
+    }
+
+    repeat(11) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
+    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+
+    allPlayers.forEach {
+      it.assertRoundIs(5)
+      it.assertHasNLives(4)
+      it.assertHasNThrowingStars(2)
+      it.assertLevelRewardIs(LevelReward.STAR)
+    }
+  }
 }
 
 private fun startServer(gameConfig: GameConfig) = startServer(InMemoryServer(gameConfig))
@@ -686,6 +739,44 @@ private fun PlayerContext.assertPlayerHasLeft(playerName: String) {
 
 private fun Page.assertPlayerHasLeft(playerName: String) {
   assertThat(playerLeftText()).hasText("$playerName left")
+}
+
+private fun PlayerContext.assertLevelRewardIsEmpty() {
+  page.assertLevelRewardIsEmpty()
+}
+
+private fun Page.assertLevelRewardIsEmpty() {
+  assertThat(starLevelReward()).not().isVisible()
+  assertThat(starLevelReward()).not().isAttached()
+  assertThat(lifeLevelReward()).not().isVisible()
+  assertThat(lifeLevelReward()).not().isAttached()
+  assertThat(levelReward()).isEmpty()
+}
+
+private fun PlayerContext.assertLevelRewardIs(expected: LevelReward) {
+  when (expected) {
+    LevelReward.NONE -> assertLevelRewardIsEmpty()
+    LevelReward.LIFE -> assertLevelRewardIsLife()
+    LevelReward.STAR -> assertLevelRewardIsStar()
+  }
+}
+
+private fun PlayerContext.assertLevelRewardIsStar() {
+  page.assertLevelRewardIsStar()
+}
+
+private fun Page.assertLevelRewardIsStar() {
+  assertThat(starLevelReward()).isVisible()
+  assertThat(starLevelReward()).isAttached()
+}
+
+private fun PlayerContext.assertLevelRewardIsLife() {
+  page.assertLevelRewardIsLife()
+}
+
+private fun Page.assertLevelRewardIsLife() {
+  assertThat(lifeLevelReward()).isVisible()
+  assertThat(lifeLevelReward()).isAttached()
 }
 
 private fun PlayerContext.assertRoundIs(n: Int) {
@@ -906,6 +997,12 @@ private fun Page.assertHasNCards(n: Int) {
   assertThat(cardList).hasCount(n)
   assertThat(cardList).hasText((1..n).map { cardValuePattern }.toTypedArray())
 }
+
+private fun Page.starLevelReward(): Locator = levelReward().getByTestId("star")
+
+private fun Page.lifeLevelReward(): Locator = levelReward().getByTestId("life")
+
+private fun Page.levelReward(): Locator = getByTestId("level-reward")
 
 private fun Page.playedCards(): Locator = getByTestId("played-cards").getByTestId("card-value")
 

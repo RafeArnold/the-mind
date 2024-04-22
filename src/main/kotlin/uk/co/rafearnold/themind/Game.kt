@@ -85,7 +85,14 @@ data class InGame(
   var stars: Int,
   var isVotingToThrowStar: Boolean,
   var playedCards: MutableList<Card>,
+  var levelReward: LevelReward,
 ) : GameState
+
+enum class LevelReward {
+  NONE,
+  LIFE,
+  STAR,
+}
 
 data object GameWon : GameState
 
