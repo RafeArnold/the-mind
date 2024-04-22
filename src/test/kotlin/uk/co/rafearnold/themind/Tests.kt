@@ -585,6 +585,7 @@ class TestSupportTests {
           stars = Random.nextInt(0, 2),
           isVotingToThrowStar = Random.nextBoolean(),
           playedCards = mutableListOf(),
+          levelReward = LevelReward.NONE,
         ),
     )
 }

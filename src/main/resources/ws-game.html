@@ -21,13 +21,23 @@
     {% endfor %}
   </div>
   <div class="m-5 flex items-center justify-center">
-    <div class="group min-h-72 max-w-xl grow flex items-center justify-center rounded-3xl border-rose-800 border-2" data-testid="played-cards">
+    <div class="group min-h-72 max-w-xl grow flex items-center justify-center rounded-3xl border-rose-800 border-2 relative" data-testid="played-cards">
       {% for value in model.playedCards %}
       <div
         class="transition ease-in-out group-hover:rotate-[{{transformation(loop.index, loop.length, 1)}}deg] group-hover:translate-x-[{{transformation(loop.index, loop.length, 32)}}px] duration-300 absolute origin-bottom-left">
         {{ card(value, "border-rose-800") }}
       </div>
       {% endfor %}
+      <div class="absolute right-5 bottom-5 text-xs text-center">
+        <span>level reward</span>
+        <div class="mt-2 mx-auto flex items-center justify-center rounded-lg border-indigo-500 border-2 size-8" data-testid="level-reward">
+          {% if model.levelReward == "LIFE" %}
+          <i class="fa-solid fa-heart" data-testid="life"></i>
+          {% elseif model.levelReward == "STAR" %}
+          <i class="fa-solid fa-star" data-testid="star"></i>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
   <div class="m-5 flex items-center justify-evenly" data-testid="card-list">
