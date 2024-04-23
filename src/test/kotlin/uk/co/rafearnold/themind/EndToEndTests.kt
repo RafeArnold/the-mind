@@ -149,8 +149,7 @@ class EndToEndTests {
   fun `can refresh in lobby`() {
     server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
 
-    val allPlayers = browser.createPlayerContexts(3)
-    allPlayers.forEach { it.navigateToHome(port = server.port()) }
+    val allPlayers = server.createPlayers(browser, 3)
     val gameId: String = allPlayers[0].createGame()
     allPlayers.drop(1).forEach { it.joinGame(gameId) }
 
@@ -158,7 +157,7 @@ class EndToEndTests {
 
     allPlayers.forEach { assertThat(it.page.gameIdDisplay()).hasText(gameId) }
 
-    allPlayers[0].startGame()
+    allPlayers.forEach { it.toggleReady() }
 
     allPlayers.forEach { it.assertHasNLives(1) }
   }
@@ -230,8 +229,7 @@ class EndToEndTests {
   fun `all players in lobby are displayed`() {
     server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
 
-    val allPlayers: List<PlayerContext> = browser.createPlayerContexts(3)
-    allPlayers.forEach { it.navigateToHome(port = server.port()) }
+    val allPlayers = server.createPlayers(browser, 3)
 
     val gameId: String = allPlayers[0].createGame()
     allPlayers[0].assertAllPlayersAre(listOf(allPlayers[0].name))
@@ -293,10 +291,7 @@ class EndToEndTests {
   fun `can leave lobby`() {
     server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
 
-    val allPlayers: List<PlayerContext> = browser.createPlayerContexts(3)
-    allPlayers.forEach { it.navigateToHome(port = server.port()) }
-    val gameId: String = allPlayers[0].createGame()
-    allPlayers.drop(1).forEach { it.joinGame(gameId) }
+    val allPlayers = server.createNewGame(browser)
 
     allPlayers.forEach {
       it.assertAllPlayersAre(allPlayers.map { p -> p.name })
@@ -316,34 +311,10 @@ class EndToEndTests {
   }
 
   @Test
-  fun `new host is assigned when host leaves lobby`() {
-    server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
-
-    val allPlayers: List<PlayerContext> = browser.createPlayerContexts(3)
-    allPlayers.forEach { it.navigateToHome(port = server.port()) }
-    val gameId: String = allPlayers[0].createGame()
-    allPlayers.drop(1).forEach { it.joinGame(gameId) }
-
-    allPlayers.forEach { it.assertAllPlayersAre(allPlayers.map { p -> p.name }) }
-    assertThat(allPlayers[0].page.startGameButton()).isVisible()
-    allPlayers.drop(1).forEach { assertThat(it.page.startGameButton()).not().isAttached() }
-
-    allPlayers[0].leaveGame(confirm = false)
-
-    val newAllPlayers = allPlayers.drop(1)
-    newAllPlayers.forEach { it.assertAllPlayersAre(newAllPlayers.map { p -> p.name }) }
-    assertThat(newAllPlayers[0].page.startGameButton()).isVisible()
-    newAllPlayers.drop(1).forEach { assertThat(it.page.startGameButton()).not().isAttached() }
-  }
-
-  @Test
   fun `last player can leave lobby`() {
     server = startServer(gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0))
 
-    val allPlayers: List<PlayerContext> = browser.createPlayerContexts(3)
-    allPlayers.forEach { it.navigateToHome(port = server.port()) }
-    val gameId: String = allPlayers[0].createGame()
-    allPlayers.drop(1).forEach { it.joinGame(gameId) }
+    val allPlayers = server.createNewGame(browser)
 
     allPlayers[0].leaveGame(confirm = false)
     allPlayers[2].leaveGame(confirm = false)
@@ -631,24 +602,25 @@ class EndToEndTests {
   fun `can not start a game with less than 2 players`() {
     server = startServer(gameConfig(roundCount = 3, startingLivesCount = 2, startingStarsCount = 2))
 
-    val players = browser.createPlayerContexts(2)
+    val players = server.createPlayers(browser, 2)
     val player1 = players[0]
-    player1.navigateToHome(port = server.port())
     val gameId = player1.createGame()
 
-    val startGameButton = player1.page.startGameButton()
-    assertThat(startGameButton).isVisible()
-    assertThat(startGameButton).isDisabled()
+    player1.assertReadyPlayersAre(emptyList())
+
+    // Readying when only one player does not start the game.
+    player1.toggleReady()
+    player1.assertReadyPlayersAre(listOf(player1.name))
+    assertThat(player1.page.currentRoundDisplay()).not().isAttached()
 
     val player2 = players[1]
-    player2.navigateToHome(port = server.port())
     player2.joinGame(gameId = gameId)
 
-    assertThat(startGameButton).isVisible()
-    assertThat(startGameButton).isEnabled()
-
-    player1.startGame()
-    players.forEach { it.assertRoundIs(1) }
+    player2.toggleReady()
+    players.forEach {
+      assertThat(it.page.toggleReadyButton()).not().isAttached()
+      it.assertRoundIs(1)
+    }
   }
 
   @Test
@@ -703,6 +675,54 @@ class EndToEndTests {
       it.assertLevelRewardIs(LevelReward.STAR)
     }
   }
+
+  @Test
+  fun `all players must be ready before starting`() {
+    server = startServer()
+
+    val allPlayers = server.createNewGame(browser)
+
+    allPlayers.forEach { it.assertReadyPlayersAre(emptyList()) }
+
+    allPlayers[0].toggleReady()
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[0].name)) }
+
+    allPlayers[2].toggleReady()
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[0].name, allPlayers[2].name)) }
+
+    allPlayers[0].toggleReady()
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[2].name)) }
+
+    allPlayers[1].toggleReady()
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[1].name, allPlayers[2].name)) }
+
+    allPlayers[0].toggleReady()
+    allPlayers.forEach {
+      assertThat(it.page.toggleReadyButton()).not().isAttached()
+      it.assertRoundIs(1)
+    }
+  }
+
+  @Test
+  fun `when the only unready player leaves the lobby then the game starts`() {
+    server = startServer()
+
+    val allPlayers = server.createNewGame(browser)
+
+    allPlayers.forEach { it.assertReadyPlayersAre(emptyList()) }
+
+    allPlayers[0].toggleReady()
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[0].name)) }
+
+    allPlayers[2].toggleReady()
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[0].name, allPlayers[2].name)) }
+
+    allPlayers[1].leaveGame(confirm = false)
+    assertThat(allPlayers[0].page.toggleReadyButton()).not().isAttached()
+    allPlayers[0].assertRoundIs(1)
+    assertThat(allPlayers[2].page.toggleReadyButton()).not().isAttached()
+    allPlayers[2].assertRoundIs(1)
+  }
 }
 
 private fun startServer(gameConfig: GameConfig) = startServer(InMemoryServer(gameConfig))
@@ -717,18 +737,33 @@ private fun gameConfig(
   }
 
 private fun Http4kServer.startNewGame(browser: Browser): List<PlayerContext> {
-  val players: List<PlayerContext> = browser.createPlayerContexts(3)
+  val players = createNewGame(browser)
+  players.forEach { it.toggleReady() }
   players.forEach {
-    // Ensure everything is self-hosted by killing all requests outside the local server.
-    it.page.context()
-      .route(Pattern.compile("^(?!http://localhost:${port()}).*")) { route -> route.abort() }
-    it.navigateToHome(port = port())
+    assertThat(it.page.toggleReadyButton()).not().isAttached()
+    it.assertRoundIs(1)
   }
-  val gameId: String = players[0].createGame()
-  players.drop(1).forEach { it.joinGame(gameId) }
-  players[0].startGame()
   return players
 }
+
+private fun Http4kServer.createNewGame(browser: Browser): List<PlayerContext> {
+  val players: List<PlayerContext> = createPlayers(browser, 3)
+  val gameId: String = players[0].createGame()
+  players.drop(1).forEach { it.joinGame(gameId) }
+  return players
+}
+
+private fun Http4kServer.createPlayers(
+  browser: Browser,
+  n: Int,
+): List<PlayerContext> =
+  browser.createPlayerContexts(n)
+    .onEach {
+      // Ensure everything is self-hosted by killing all requests outside the local server.
+      it.page.context()
+        .route(Pattern.compile("^(?!http://localhost:${port()}).*")) { route -> route.abort() }
+      it.navigateToHome(port = port())
+    }
 
 private fun Browser.createPlayerContexts(n: Int): List<PlayerContext> =
   playerNames.shuffled().take(n).map { PlayerContext(name = it, page = newContext().newPage()) }
@@ -784,7 +819,7 @@ private fun PlayerContext.assertRoundIs(n: Int) {
 }
 
 private fun Page.assertRoundIs(n: Int) {
-  val roundNumber = getByTestId("current-round-num")
+  val roundNumber = currentRoundDisplay()
   assertThat(roundNumber).isVisible()
   assertThat(roundNumber).hasText(n.toString())
 }
@@ -812,6 +847,19 @@ private fun Page.assertPlayedCardsAre(values: List<Int>) {
   val cardValues = playedCards()
   assertThat(cardValues).hasCount(values.size)
   assertThat(cardValues).hasText(values.map { it.toString() }.toTypedArray())
+}
+
+private fun PlayerContext.assertReadyPlayersAre(names: List<String>) {
+  page.assertReadyPlayersAre(names = names)
+}
+
+private fun Page.assertReadyPlayersAre(names: List<String>) {
+  val readyPlayers =
+    getByTestId("all-players")
+      .locator("[data-testid='player']:has([data-testid='is-ready-display'])")
+      .getByTestId("player-name")
+  assertThat(readyPlayers).hasCount(names.size)
+  assertThat(readyPlayers).hasText(names.toTypedArray())
 }
 
 private fun PlayerContext.assertAllPlayersAre(names: List<String>) {
@@ -1008,14 +1056,12 @@ private fun Page.playedCards(): Locator = getByTestId("played-cards").getByTestI
 
 private fun Page.cardList(): Locator = getByTestId("card-list").getByTestId("card-value")
 
-private fun PlayerContext.startGame() {
-  page.startGame()
+private fun PlayerContext.toggleReady() {
+  page.toggleReady()
 }
 
-private fun Page.startGame() {
-  val startGameButton = startGameButton()
-  startGameButton.click()
-  assertThat(startGameButton).not().isAttached()
+private fun Page.toggleReady() {
+  toggleReadyButton().click()
 }
 
 private fun PlayerContext.createGame(): String = page.createGame(name = name)
@@ -1071,13 +1117,15 @@ private fun Page.leaveGame(confirm: Boolean) {
 
 private fun Page.gameIdDisplay(): Locator = getByTestId("game-id")
 
+private fun Page.currentRoundDisplay(): Locator? = getByTestId("current-round-num")
+
 private fun Page.currentLivesCountDisplay(): Locator? = getByTestId("current-lives-count")
 
 private fun Page.createGameButton(): Locator = getByTestId("create-game-button")
 
 private fun Page.joinGameButton(): Locator = getByTestId("join-game-button")
 
-private fun Page.startGameButton(): Locator = getByTestId("start-game-button")
+private fun Page.toggleReadyButton(): Locator = getByTestId("toggle-ready-button")
 
 private fun Page.winnerText(): Locator? = getByTestId("winner-text")
 

@@ -14,24 +14,24 @@ object HomeViewModel : ViewModel {
 
 data class LobbyViewModel(
   override val gameId: String,
-  override val isHost: Boolean,
-  override val allPlayers: List<String>,
+  override val isReady: Boolean,
+  override val allPlayers: List<Player>,
 ) : LobbyView, ViewModel {
   override fun template(): String = "lobby"
 }
 
 data class WsLobbyViewModel(
   override val gameId: String,
-  override val isHost: Boolean,
-  override val allPlayers: List<String>,
+  override val isReady: Boolean,
+  override val allPlayers: List<Player>,
 ) : LobbyView, ViewModel {
   override fun template(): String = "ws-lobby"
 }
 
 interface LobbyView {
   val gameId: String
-  val isHost: Boolean
-  val allPlayers: List<String>
+  val isReady: Boolean
+  val allPlayers: List<Player>
 }
 
 data class GameViewModel(

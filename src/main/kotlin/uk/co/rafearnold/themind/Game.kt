@@ -24,7 +24,9 @@ interface Server {
 
   fun getConnection(playerId: String): GameConnection?
 
-  fun startGame(playerId: String)
+  fun ready(playerId: String)
+
+  fun unready(playerId: String)
 
   fun playCard(playerId: String)
 
@@ -46,7 +48,8 @@ data class GameConnection(
   override fun receive(action: Action) {
     when (action) {
       Action.PlayCard -> server.playCard(playerId = player.id)
-      Action.StartGame -> server.startGame(playerId = player.id)
+      Action.Ready -> server.ready(playerId = player.id)
+      Action.Unready -> server.unready(playerId = player.id)
       Action.VoteToThrowStar -> server.voteToThrowStar(playerId = player.id)
       Action.RevokeVoteToThrowStar -> server.revokeVoteToThrowStar(playerId = player.id)
     }
@@ -61,7 +64,7 @@ data class GameConnection(
   fun triggerUpdate() = listeners.values.forEach { it() }
 }
 
-data class Player(val id: String, val name: String, var isHost: Boolean)
+data class Player(val id: String, val name: String, var isReady: Boolean)
 
 data class OtherPlayer(
   val id: String,
@@ -115,7 +118,9 @@ data class GameConfig(
 )
 
 sealed interface Action {
-  data object StartGame : Action
+  data object Ready : Action
+
+  data object Unready : Action
 
   data object PlayCard : Action
 

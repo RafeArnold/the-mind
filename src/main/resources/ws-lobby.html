@@ -4,16 +4,17 @@
     {% include "leave-button.html" %}
   </div>
   <ul class="m-10 mt-5 p-5 max-w-xl rounded-2xl border-indigo-500 border-2" data-testid="all-players">
-    {% for playerName in model.allPlayers %}
-    <li data-testid="player-name" class="truncate">{{ playerName }}</li>
+    {% for player in model.allPlayers %}
+    <li class="flex items-center justify-between" data-testid="player">
+      <div data-testid="player-name" class="truncate">{{ player.name }}</div>
+      {% if player.isReady %}<i class="ml-3 fa-solid fa-check text-green-400" data-testid="is-ready-display"></i>{% endif %}
+    </li>
     {% endfor %}
   </ul>
-  {% if model.isHost %}
   <form ws-send>
-    <input type="hidden" name="action" value="start">
+    <input type="hidden" name="action" value="{% if model.isReady %}unready{% else %}ready{% endif %}">
     <div class="text-center">
-      <button type="submit" {% if model.allPlayers | length < 2 %}disabled{% endif %} class="py-2 px-4 sm:px-6 rounded-lg bg-indigo-500 disabled:bg-gray-500 disabled:text-gray-700 text-center text-xl sm:text-2xl" data-testid="start-game-button">start</button>
+      <button type="submit" class="py-2 px-4 sm:px-6 rounded-lg bg-indigo-500 text-center text-xl sm:text-2xl" data-testid="toggle-ready-button">{% if model.isReady %}unready{% else %}ready{% endif %}</button>
     </div>
   </form>
-  {% endif %}
 </div>
