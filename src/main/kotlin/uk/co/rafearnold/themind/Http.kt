@@ -104,8 +104,8 @@ class Index(
           is InLobby ->
             LobbyViewModel(
               gameId = connection.gameId,
-              isHost = connection.player.isHost,
-              allPlayers = state.allPlayers.map { it.name },
+              isReady = connection.player.isReady,
+              allPlayers = state.allPlayers,
             )
           is InGame ->
             GameViewModel(
@@ -154,7 +154,8 @@ class Listen(
         logger.debug("WS message received: ${it.bodyString()}")
         val action =
           when (actionLens(it)) {
-            WsAction.StartGame -> Action.StartGame
+            WsAction.Ready -> Action.Ready
+            WsAction.Unready -> Action.Unready
             WsAction.PlayCard -> Action.PlayCard
             WsAction.VoteToThrowStar -> Action.VoteToThrowStar
             WsAction.RevokeVoteToThrowStar -> Action.RevokeVoteToThrowStar
@@ -192,8 +193,8 @@ private fun Websocket.sendView(
       is InLobby ->
         WsLobbyViewModel(
           gameId = connection.gameId,
-          isHost = connection.player.isHost,
-          allPlayers = state.allPlayers.map { it.name },
+          isReady = connection.player.isReady,
+          allPlayers = state.allPlayers,
         )
       is PlayerLeft -> WsPlayerLeftViewModel(playerThatLeftName = state.playerName)
     }
@@ -204,14 +205,17 @@ private val actionLens: BiDiWsMessageLens<WsAction> = WsMessage.auto<WsAction>()
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "action")
 @JsonSubTypes(
-  JsonSubTypes.Type(value = WsAction.StartGame::class, name = "start"),
+  JsonSubTypes.Type(value = WsAction.Ready::class, name = "ready"),
+  JsonSubTypes.Type(value = WsAction.Unready::class, name = "unready"),
   JsonSubTypes.Type(value = WsAction.PlayCard::class, name = "play"),
   JsonSubTypes.Type(value = WsAction.VoteToThrowStar::class, name = "vote"),
   JsonSubTypes.Type(value = WsAction.RevokeVoteToThrowStar::class, name = "revokeVote"),
   JsonSubTypes.Type(value = WsAction.Heartbeat::class, name = "heartbeat"),
 )
 private sealed interface WsAction {
-  data object StartGame : WsAction
+  data object Ready : WsAction
+
+  data object Unready : WsAction
 
   data object PlayCard : WsAction
 

@@ -12,17 +12,17 @@ class InMemoryServer(
   override fun createGame(playerName: String): GameConnection {
     val gameId = gameIdGenerator.nextId()
     val playerId = UUID.randomUUID().toString()
-    val player = Player(id = playerId, name = playerName, isHost = true)
-    val host =
+    val player = Player(id = playerId, name = playerName, isReady = false)
+    val connection =
       GameConnection(
         server = this,
         gameId = gameId,
         player = player,
         state = InLobby(allPlayers = mutableListOf(player)),
       )
-    val game = InternalGame(id = gameId, connections = mutableListOf(host))
+    val game = InternalGame(id = gameId, connections = mutableListOf(connection))
     games.add(game)
-    return host
+    return connection
   }
 
   override fun joinGame(
@@ -32,7 +32,7 @@ class InMemoryServer(
     val game = get(gameId = gameId)
     val allPlayers = game.connections
     val playerId = UUID.randomUUID().toString()
-    val player = Player(id = playerId, name = playerName, isHost = false)
+    val player = Player(id = playerId, name = playerName, isReady = false)
     val connection =
       GameConnection(
         server = this,
@@ -49,29 +49,21 @@ class InMemoryServer(
   override fun getConnection(playerId: String): GameConnection? =
     getGame(playerId = playerId)?.let { (_, connection) -> connection }
 
-  override fun startGame(playerId: String) {
-    val (game, _) = getGame(playerId = playerId)!!
-    val deck = shuffledDeck()
+  override fun ready(playerId: String) {
+    val (game, connection) = getGame(playerId = playerId)!!
+    connection.player.isReady = true
     for (player in game.connections) {
-      val inLobbyState = player.state as InLobby
-      player.state =
-        InGame(
-          otherPlayers =
-            inLobbyState.allPlayers
-              .filter { it.id != player.player.id }
-              .map {
-                OtherPlayer(id = it.id, name = it.name, isVotingToThrowStar = false, cardCount = 1)
-              }
-              .toMutableList(),
-          currentRound = 1,
-          roundCount = gameConfig.roundCount(inLobbyState),
-          cards = mutableListOf(Card(deck.next())),
-          lives = gameConfig.startingLivesCount(inLobbyState),
-          stars = gameConfig.startingStarsCount,
-          isVotingToThrowStar = false,
-          playedCards = mutableListOf(),
-          levelReward = LevelReward.NONE,
-        )
+      (player.state as InLobby).allPlayers.first { it.id == connection.player.id }.isReady = true
+    }
+    game.handlePossibleGameStart()
+    game.triggerUpdate()
+  }
+
+  override fun unready(playerId: String) {
+    val (game, connection) = getGame(playerId = playerId)!!
+    connection.player.isReady = false
+    for (player in game.connections) {
+      (player.state as InLobby).allPlayers.first { it.id == connection.player.id }.isReady = false
     }
     game.triggerUpdate()
   }
@@ -160,12 +152,8 @@ class InMemoryServer(
   override fun leave(playerId: String) {
     val (game, connection) = getGame(playerId = playerId)!!
     game.connections.remove(connection)
-    if (connection.player.isHost) {
-      if (game.connections.isNotEmpty()) {
-        game.connections[0].player.isHost = true
-      } else {
-        games.remove(game)
-      }
+    if (game.connections.isEmpty()) {
+      games.remove(game)
     }
     for (player in game.connections) {
       when (val state = player.state) {
@@ -175,6 +163,9 @@ class InMemoryServer(
         is InLobby -> state.allPlayers.removeIf { it.id == connection.player.id }
         is PlayerLeft -> Unit // Do nothing.
       }
+    }
+    if (connection.state is InLobby) {
+      game.handlePossibleGameStart()
     }
     game.triggerUpdate()
   }
@@ -203,6 +194,39 @@ class InMemoryServer(
             else -> player.levelReward = LevelReward.NONE
           }
         }
+      }
+    }
+  }
+
+  private fun InternalGame.handlePossibleGameStart() {
+    if (connections.size > 1 && connections.all { it.player.isReady }) {
+      // Everyone is ready, so starting the game.
+      val deck = shuffledDeck()
+      for (player in connections) {
+        val inLobbyState = player.state as InLobby
+        player.state =
+          InGame(
+            otherPlayers =
+              inLobbyState.allPlayers
+                .filter { it.id != player.player.id }
+                .map {
+                  OtherPlayer(
+                    id = it.id,
+                    name = it.name,
+                    isVotingToThrowStar = false,
+                    cardCount = 1,
+                  )
+                }
+                .toMutableList(),
+            currentRound = 1,
+            roundCount = gameConfig.roundCount(inLobbyState),
+            cards = mutableListOf(Card(deck.next())),
+            lives = gameConfig.startingLivesCount(inLobbyState),
+            stars = gameConfig.startingStarsCount,
+            isVotingToThrowStar = false,
+            playedCards = mutableListOf(),
+            levelReward = LevelReward.NONE,
+          )
       }
     }
   }

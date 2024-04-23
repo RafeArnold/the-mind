@@ -18,22 +18,24 @@ class Tests {
       InMemoryServer(
         gameConfig = gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
       )
-    val host = server.createGame()
-    val gameId = host.gameId
-    assertEquals(InLobby(allPlayers = mutableListOf(host.player)), host.state)
+    val player1 = server.createGame()
+    val gameId = player1.gameId
+    assertEquals(InLobby(allPlayers = mutableListOf(player1.player)), player1.state)
     val player2 = server.joinGame(gameId = gameId)
-    assertEquals(InLobby(allPlayers = mutableListOf(host.player, player2.player)), host.state)
-    assertEquals(InLobby(allPlayers = mutableListOf(host.player, player2.player)), player2.state)
+    assertEquals(InLobby(allPlayers = mutableListOf(player1.player, player2.player)), player1.state)
+    assertEquals(InLobby(allPlayers = mutableListOf(player1.player, player2.player)), player2.state)
     val player3 = server.joinGame(gameId = gameId)
-    val allPlayers = mutableListOf(host.player, player2.player, player3.player)
-    assertEquals(InLobby(allPlayers = allPlayers), host.state)
+    val allPlayers = mutableListOf(player1.player, player2.player, player3.player)
+    assertEquals(InLobby(allPlayers = allPlayers), player1.state)
     assertEquals(InLobby(allPlayers = allPlayers), player2.state)
     assertEquals(InLobby(allPlayers = allPlayers), player3.state)
-    server.startGame(host)
-    host.assertInGameWithOneCard()
+    server.ready(player1)
+    server.ready(player2)
+    server.ready(player3)
+    player1.assertInGameWithOneCard()
     player2.assertInGameWithOneCard()
     player3.assertInGameWithOneCard()
-    val players = mutableListOf(host, player2, player3)
+    val players = mutableListOf(player1, player2, player3)
     players.assertNoDuplicateCards()
     var nextPlayer = players.nextPlayer()
     server.playCard(nextPlayer)
@@ -46,7 +48,7 @@ class Tests {
     players.remove(nextPlayer)
     players.forEach { it.assertInGameWithOneCard() }
     server.playCard(players[0])
-    assertEquals(GameWon, host.state)
+    assertEquals(GameWon, player1.state)
     assertEquals(GameWon, player2.state)
     assertEquals(GameWon, player3.state)
   }
@@ -57,17 +59,17 @@ class Tests {
       InMemoryServer(
         gameConfig = gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
       )
-    val host = server.createGame()
-    val gameId = host.gameId
+    val player1 = server.createGame()
+    val gameId = player1.gameId
     val player2 = server.joinGame(gameId = gameId)
     val player3 = server.joinGame(gameId = gameId)
-    server.startGame(host)
-    val players = mutableListOf(host, player2, player3)
+    val players = listOf(player1, player2, player3)
+    players.forEach { server.ready(it) }
     val firstPlayer = players.nextPlayer()
     server.playCard(firstPlayer)
     val incorrectNextPlayer = players.first { it != firstPlayer && it != players.nextPlayer() }
     server.playCard(incorrectNextPlayer)
-    assertEquals(GameLost, host.state)
+    assertEquals(GameLost, player1.state)
     assertEquals(GameLost, player2.state)
     assertEquals(GameLost, player3.state)
   }
@@ -78,12 +80,12 @@ class Tests {
       InMemoryServer(
         gameConfig = gameConfig(roundCount = 3, startingLivesCount = 1, startingStarsCount = 0),
       )
-    val host = server.createGame()
-    val gameId = host.gameId
+    val player1 = server.createGame()
+    val gameId = player1.gameId
     val player2 = server.joinGame(gameId = gameId)
     val player3 = server.joinGame(gameId = gameId)
-    server.startGame(host)
-    val allPlayers = listOf(host, player2, player3)
+    val allPlayers = listOf(player1, player2, player3)
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { it.assertInGameWithNCards(1) }
     for (i in 1..3) {
       server.playCard(allPlayers.nextPlayer())
@@ -105,12 +107,12 @@ class Tests {
       InMemoryServer(
         gameConfig = gameConfig(roundCount = 3, startingLivesCount = 3, startingStarsCount = 0),
       )
-    val host = server.createGame()
-    val gameId = host.gameId
+    val player1 = server.createGame()
+    val gameId = player1.gameId
     val player2 = server.joinGame(gameId = gameId)
     val player3 = server.joinGame(gameId = gameId)
-    server.startGame(host)
-    val allPlayers = mutableListOf(host, player2, player3)
+    val allPlayers = listOf(player1, player2, player3)
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { assertEquals(3, it.lives) }
 
     allPlayers[0].cards = mutableListOf(Card(value = 73))
@@ -143,13 +145,15 @@ class Tests {
       InMemoryServer(
         gameConfig = gameConfig(roundCount = 2, startingLivesCount = 1, startingStarsCount = 2),
       )
-    val host = server.createGame()
-    val gameId = host.gameId
+    val player1 = server.createGame()
+    val gameId = player1.gameId
     val player2 = server.joinGame(gameId = gameId)
     val player3 = server.joinGame(gameId = gameId)
-    server.startGame(host)
+    server.ready(player1)
+    server.ready(player2)
+    server.ready(player3)
 
-    val allPlayers = mutableListOf(host, player2, player3)
+    val allPlayers = mutableListOf(player1, player2, player3)
     allPlayers.sortByMinCardValue()
     allPlayers.forEach { assertEquals(2, it.stars) }
     allPlayers.forEach { assertFalse(it.isVotingToThrowStar) }
@@ -158,16 +162,16 @@ class Tests {
 
     server.voteToThrowStar(player2)
     assertTrue(player2.isVotingToThrowStar)
-    assertFalse(host.isVotingToThrowStar)
+    assertFalse(player1.isVotingToThrowStar)
     assertFalse(player3.isVotingToThrowStar)
     allPlayers.forEach { assertEquals(2, it.stars) }
     allPlayers[0].assertInGameWithNCards(0)
     allPlayers[1].assertInGameWithNCards(1)
     allPlayers[2].assertInGameWithNCards(1)
 
-    server.voteToThrowStar(host)
+    server.voteToThrowStar(player1)
     assertTrue(player2.isVotingToThrowStar)
-    assertTrue(host.isVotingToThrowStar)
+    assertTrue(player1.isVotingToThrowStar)
     assertFalse(player3.isVotingToThrowStar)
     allPlayers.forEach { assertEquals(2, it.stars) }
     allPlayers[0].assertInGameWithNCards(0)
@@ -211,13 +215,15 @@ class Tests {
       InMemoryServer(
         gameConfig = gameConfig(roundCount = 2, startingLivesCount = 1, startingStarsCount = 1),
       )
-    val host = server.createGame()
-    val gameId = host.gameId
+    val player1 = server.createGame()
+    val gameId = player1.gameId
     val player2 = server.joinGame(gameId = gameId)
     val player3 = server.joinGame(gameId = gameId)
-    server.startGame(host)
+    server.ready(player1)
+    server.ready(player2)
+    server.ready(player3)
 
-    val allPlayers = mutableListOf(host, player2, player3)
+    val allPlayers = mutableListOf(player1, player2, player3)
     allPlayers.sortByMinCardValue()
 
     server.voteToThrowStar(allPlayers[0])
@@ -248,21 +254,25 @@ class Tests {
       InMemoryServer(
         gameConfig = gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 1),
       )
-    val host = server.createGame()
-    val gameId = host.gameId
+    val player1 = server.createGame()
+    val gameId = player1.gameId
     val player2 = server.joinGame(gameId = gameId)
     val player3 = server.joinGame(gameId = gameId)
 
-    assertEquals(listOf(host.player, player2.player, player3.player), host.lobbyState.allPlayers)
+    assertEquals(
+      listOf(player1.player, player2.player, player3.player),
+      player1.lobbyState.allPlayers,
+    )
 
     server.leave(player3)
-    assertEquals(listOf(host.player, player2.player), host.lobbyState.allPlayers)
+    assertEquals(listOf(player1.player, player2.player), player1.lobbyState.allPlayers)
 
-    server.startGame(host)
+    server.ready(player1)
+    server.ready(player2)
 
-    server.playCard(listOf(host, player2).nextPlayer())
-    server.playCard(listOf(host, player2).nextPlayer())
-    assertEquals(GameWon, host.state)
+    server.playCard(listOf(player1, player2).nextPlayer())
+    server.playCard(listOf(player1, player2).nextPlayer())
+    assertEquals(GameWon, player1.state)
     assertEquals(GameWon, player2.state)
   }
 
@@ -272,11 +282,13 @@ class Tests {
       InMemoryServer(
         gameConfig = gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 1),
       )
-    val host = server.createGame()
-    val gameId = host.gameId
+    val player1 = server.createGame()
+    val gameId = player1.gameId
     val player2 = server.joinGame(gameId = gameId)
     val player3 = server.joinGame(gameId = gameId)
-    server.startGame(host)
+    server.ready(player1)
+    server.ready(player2)
+    server.ready(player3)
 
     assertEquals(
       listOf(
@@ -293,12 +305,12 @@ class Tests {
           cardCount = player3.cards.size,
         ),
       ),
-      host.inGameState.otherPlayers,
+      player1.inGameState.otherPlayers,
     )
 
     server.leave(player3)
 
-    assertEquals(PlayerLeft(playerName = player3.player.name), host.state)
+    assertEquals(PlayerLeft(playerName = player3.player.name), player1.state)
     assertEquals(PlayerLeft(playerName = player3.player.name), player2.state)
   }
 
@@ -318,13 +330,13 @@ class Tests {
         gameConfig = gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0),
       )
 
-    val host = server.createGame()
-    val player2 = server.joinGame(gameId = host.gameId.uppercase())
-    val player3 = server.joinGame(gameId = host.gameId.lowercase())
+    val player1 = server.createGame()
+    val player2 = server.joinGame(gameId = player1.gameId.uppercase())
+    val player3 = server.joinGame(gameId = player1.gameId.lowercase())
 
     assertEquals(
-      listOf(host.player.name, player2.player.name, player3.player.name),
-      host.lobbyState.allPlayers.map { it.name },
+      listOf(player1.player.name, player2.player.name, player3.player.name),
+      player1.lobbyState.allPlayers.map { it.name },
     )
   }
 
@@ -334,12 +346,13 @@ class Tests {
 
     repeat(99) {
       val playerCount = it + 2
-      val host = server.createGame()
-      val otherPlayers = List(playerCount - 1) { server.joinGame(gameId = host.gameId) }
+      val player1 = server.createGame()
+      val otherPlayers = List(playerCount - 1) { server.joinGame(gameId = player1.gameId) }
+      val allPlayers = (otherPlayers + player1)
 
-      server.startGame(host)
+      allPlayers.forEach { player -> server.ready(player) }
 
-      (otherPlayers + host).forEach { player -> assertEquals(playerCount, player.lives) }
+      allPlayers.forEach { player -> assertEquals(playerCount, player.lives) }
     }
   }
 
@@ -347,27 +360,28 @@ class Tests {
   fun `starting stars count is 1`() {
     val server = InMemoryServer()
 
-    val host = server.createGame()
-    val otherPlayers = List(2) { server.joinGame(gameId = host.gameId) }
+    val player1 = server.createGame()
+    val otherPlayers = List(2) { server.joinGame(gameId = player1.gameId) }
+    val allPlayers = (otherPlayers + player1)
 
-    server.startGame(host)
+    allPlayers.forEach { server.ready(it) }
 
-    (otherPlayers + host).forEach { player -> assertEquals(1, player.stars) }
+    allPlayers.forEach { player -> assertEquals(1, player.stars) }
   }
 
   @ParameterizedTest
-  @CsvSource("1,12", "2,12", "3,10", "4,8", "5,8", "6,8")
+  @CsvSource("2,12", "3,10", "4,8", "5,8", "6,8")
   fun `total round count is determined by the number of players`(
     playerCount: Int,
     expectedRoundCount: Int,
   ) {
     val server = InMemoryServer()
 
-    val host = server.createGame()
-    val otherPlayers = List(playerCount - 1) { server.joinGame(gameId = host.gameId) }
-    val allPlayers = listOf(host) + otherPlayers
+    val player1 = server.createGame()
+    val otherPlayers = List(playerCount - 1) { server.joinGame(gameId = player1.gameId) }
+    val allPlayers = listOf(player1) + otherPlayers
 
-    server.startGame(host)
+    allPlayers.forEach { server.ready(it) }
 
     repeat(expectedRoundCount) { roundIndex ->
       allPlayers.forEach { assertEquals(roundIndex + 1, it.currentRound) }
@@ -382,9 +396,9 @@ class Tests {
   fun `rewards are given after certain rounds`() {
     val server = InMemoryServer()
 
-    val host = server.createGame()
-    val otherPlayers = List(1) { server.joinGame(gameId = host.gameId) }
-    val allPlayers = listOf(host) + otherPlayers
+    val player1 = server.createGame()
+    val otherPlayers = List(1) { server.joinGame(gameId = player1.gameId) }
+    val allPlayers = listOf(player1) + otherPlayers
 
     fun assertCountsEqual(
       lives: Int,
@@ -396,7 +410,7 @@ class Tests {
       }
     }
 
-    server.startGame(host)
+    allPlayers.forEach { server.ready(it) }
 
     assertCountsEqual(lives = 2, stars = 1)
 
@@ -472,8 +486,7 @@ private fun Server.createGame(): GameConnection =
 private fun Server.joinGame(gameId: String): GameConnection =
   joinGame(gameId = gameId, playerName = UUID.randomUUID().toString())
 
-private fun Server.startGame(connection: GameConnection) =
-  startGame(playerId = connection.player.id)
+private fun Server.ready(connection: GameConnection) = ready(playerId = connection.player.id)
 
 private fun Server.playCard(connection: GameConnection) = playCard(playerId = connection.player.id)
 
@@ -573,7 +586,7 @@ class TestSupportTests {
         Player(
           id = UUID.randomUUID().toString(),
           name = UUID.randomUUID().toString(),
-          isHost = Random.nextBoolean(),
+          isReady = false,
         ),
       state =
         InGame(
