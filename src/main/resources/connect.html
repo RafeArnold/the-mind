@@ -6,5 +6,10 @@
     <input type="hidden" name="action" value="heartbeat">
   </form>
   {% block connectContent %}{% endblock %}
+  <script>
+    // the server is likely to close the ws connection if it is idle for too long, so this will
+    // re-establish it if it is closed.
+    addEventListener('htmx:wsClose', (e) => setTimeout(() => e.detail.elt['htmx-internal-data'].webSocket.init()))
+  </script>
 </div>
 {% endblock %}
