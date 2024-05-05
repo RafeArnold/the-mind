@@ -147,11 +147,12 @@ class Listen(
 ) : WsHandler by "/listen" wsBind { request ->
     logger.debug("WS request received")
     val connection = server.connect(request)!!
-    logger.debug("Player ${connection.player.name} connected")
+    val playerInfo = "${connection.player.id} '${connection.player}'"
+    logger.debug("Player $playerInfo connected")
     WsResponse { ws: Websocket ->
       val listener = connection.listen { ws.sendView(connection = connection, view = view) }
       ws.onMessage {
-        logger.debug("WS message received: ${it.bodyString()}")
+        logger.debug("WS message received from player $playerInfo: ${it.bodyString()}")
         val action =
           when (actionLens(it)) {
             WsAction.Ready -> Action.Ready
@@ -163,9 +164,9 @@ class Listen(
           }
         connection.receive(action)
       }
-      ws.onError { logger.error("Error caught handling WS request", it) }
+      ws.onError { logger.error("Error caught handling WS request of player $playerInfo", it) }
       ws.onClose {
-        logger.debug("Player ${connection.player.name} disconnected")
+        logger.debug("Player $playerInfo disconnected")
         listener.close()
       }
     }
