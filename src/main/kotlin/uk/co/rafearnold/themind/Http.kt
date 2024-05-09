@@ -153,6 +153,9 @@ class Listen(
     val playerInfo = "${connection.player.id} '${connection.player}'"
     logger.debug("Player $playerInfo connected")
     WsResponse { ws: Websocket ->
+      // Immediately send an up-to-date view in case the browser disconnected and reconnected
+      // between an update.
+      ws.sendView(connection = connection, view = view)
       val listener = connection.listen { ws.sendView(connection = connection, view = view) }
       ws.onMessage {
         logger.debug("WS message received from player $playerInfo: ${it.bodyString()}")
