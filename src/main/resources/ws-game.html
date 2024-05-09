@@ -40,6 +40,9 @@
       </div>
     </div>
   </div>
+  {% if model.roundEnded %}
+  {% include "ready-players.html" %}
+  {% endif %}
   <div class="m-5 flex items-center justify-evenly" data-testid="card-list">
     <form ws-send>
       <input type="hidden" name="action" value="play">

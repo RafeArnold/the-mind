@@ -117,6 +117,9 @@ class Index(
               isVotingToThrowStar = state.isVotingToThrowStar,
               playedCards = state.playedCards.map { card -> card.value },
               levelReward = state.levelReward,
+              roundEnded = state.roundEnded,
+              isReady = connection.player.isReady,
+              allPlayers = state.allPlayers,
             )
           is GameLost -> GameLostViewModel
           is GameWon -> GameWonViewModel
@@ -190,6 +193,9 @@ private fun Websocket.sendView(
           isVotingToThrowStar = state.isVotingToThrowStar,
           playedCards = state.playedCards.map { card -> card.value },
           levelReward = state.levelReward,
+          roundEnded = state.roundEnded,
+          isReady = connection.player.isReady,
+          allPlayers = state.allPlayers,
         )
       is InLobby ->
         WsLobbyViewModel(
