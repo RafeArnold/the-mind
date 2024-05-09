@@ -723,6 +723,43 @@ class EndToEndTests {
     assertThat(allPlayers[2].page.toggleReadyButton()).not().isAttached()
     allPlayers[2].assertRoundIs(1)
   }
+
+  @Test
+  fun `websocket connection is re-established if closed`() {
+    server = startServer()
+
+    val allPlayers = server.createNewGame(browser)
+
+    allPlayers.forEach { it.assertReadyPlayersAre(emptyList()) }
+
+    // Code to add an event listener to force the websocket connection to close upon receiving its
+    // next message. A bit of a hack to simulate sudden websocket closure.
+    val wsCloser =
+      "document.addEventListener('htmx:wsAfterMessage', (e) => setTimeout(() => " +
+        "e.detail.elt['htmx-internal-data'].webSocket.close()), { once: true })"
+
+    // Trigger websocket closure for first page.
+    allPlayers[0].page.evaluate(wsCloser)
+    allPlayers[0].page.waitForWebSocket { allPlayers[0].toggleReady() }
+
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[0].name)) }
+
+    // Trigger websocket closure for second page.
+    allPlayers[1].page.evaluate(wsCloser)
+    allPlayers[1].page.waitForWebSocket { allPlayers[1].toggleReady() }
+
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[0].name, allPlayers[1].name)) }
+
+    // Trigger websocket closure for third page.
+    allPlayers[2].page.evaluate(wsCloser)
+    allPlayers[2].page.waitForWebSocket { allPlayers[0].toggleReady() }
+
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[1].name)) }
+    allPlayers[0].toggleReady()
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[0].name, allPlayers[1].name)) }
+    allPlayers[2].toggleReady()
+    allPlayers.forEach { it.assertRoundIs(1) }
+  }
 }
 
 private fun startServer(gameConfig: GameConfig) = startServer(InMemoryServer(gameConfig))
