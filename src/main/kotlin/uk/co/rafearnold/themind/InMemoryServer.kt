@@ -52,19 +52,17 @@ class InMemoryServer(
   override fun ready(playerId: String) {
     val (game, connection) = getGame(playerId = playerId)!!
     connection.player.isReady = true
-    for (player in game.connections) {
-      (player.state as InLobby).allPlayers.first { it.id == connection.player.id }.isReady = true
+    if (connection.state is InLobby) {
+      game.handlePossibleGameStart()
+    } else if (connection.state is InGame) {
+      game.handlePossibleRoundStart()
     }
-    game.handlePossibleGameStart()
     game.triggerUpdate()
   }
 
   override fun unready(playerId: String) {
     val (game, connection) = getGame(playerId = playerId)!!
     connection.player.isReady = false
-    for (player in game.connections) {
-      (player.state as InLobby).allPlayers.first { it.id == connection.player.id }.isReady = false
-    }
     game.triggerUpdate()
   }
 
@@ -177,22 +175,13 @@ class InMemoryServer(
       if (currentRound == connections.first().roundCount) {
         setState(GameWon)
       } else {
-        val nextRound = currentRound + 1
-        val deck = shuffledDeck()
         for (player in connections) {
-          player.currentRound = nextRound
-          player.cards = (1..nextRound).map { Card(deck.next()) }.toMutableList()
-          player.otherPlayers.forEach { it.cardCount = nextRound }
-          player.playedCards = mutableListOf()
+          player.roundEnded = true
           when (currentRound) {
             2, 5, 8 -> player.stars++
             3, 6, 9 -> player.lives++
           }
-          when (nextRound) {
-            2, 5, 8 -> player.levelReward = LevelReward.STAR
-            3, 6, 9 -> player.levelReward = LevelReward.LIFE
-            else -> player.levelReward = LevelReward.NONE
-          }
+          player.levelReward = LevelReward.NONE
         }
       }
     }
@@ -204,6 +193,7 @@ class InMemoryServer(
       val deck = shuffledDeck()
       for (player in connections) {
         val inLobbyState = player.state as InLobby
+        player.player.isReady = false
         player.state =
           InGame(
             otherPlayers =
@@ -226,7 +216,30 @@ class InMemoryServer(
             isVotingToThrowStar = false,
             playedCards = mutableListOf(),
             levelReward = LevelReward.NONE,
+            roundEnded = false,
+            allPlayers = connections.map { it.player },
           )
+      }
+    }
+  }
+
+  private fun InternalGame.handlePossibleRoundStart() {
+    if (connections.all { it.player.isReady }) {
+      val currentRound = connections.first().currentRound
+      val nextRound = currentRound + 1
+      val deck = shuffledDeck()
+      for (player in connections) {
+        player.currentRound = nextRound
+        player.cards = (1..nextRound).map { Card(deck.next()) }.toMutableList()
+        player.otherPlayers.forEach { it.cardCount = nextRound }
+        player.playedCards = mutableListOf()
+        when (nextRound) {
+          2, 5, 8 -> player.levelReward = LevelReward.STAR
+          3, 6, 9 -> player.levelReward = LevelReward.LIFE
+          else -> player.levelReward = LevelReward.NONE
+        }
+        player.roundEnded = false
+        player.player.isReady = false
       }
     }
   }
@@ -313,4 +326,10 @@ private var GameConnection.levelReward: LevelReward
   get() = (state as InGame).levelReward
   set(value) {
     (state as InGame).levelReward = value
+  }
+
+private var GameConnection.roundEnded: Boolean
+  get() = (state as InGame).roundEnded
+  set(value) {
+    (state as InGame).roundEnded = value
   }

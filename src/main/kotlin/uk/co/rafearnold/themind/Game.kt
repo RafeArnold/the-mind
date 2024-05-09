@@ -89,6 +89,8 @@ data class InGame(
   var isVotingToThrowStar: Boolean,
   var playedCards: MutableList<Card>,
   var levelReward: LevelReward,
+  var roundEnded: Boolean,
+  val allPlayers: List<Player>,
 ) : GameState
 
 enum class LevelReward {

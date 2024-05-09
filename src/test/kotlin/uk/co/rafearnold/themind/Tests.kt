@@ -90,10 +90,14 @@ class Tests {
     for (i in 1..3) {
       server.playCard(allPlayers.nextPlayer())
     }
+    allPlayers.forEach { it.assertInGameWithNCards(0) }
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { it.assertInGameWithNCards(2) }
     for (i in 1..6) {
       server.playCard(allPlayers.nextPlayer())
     }
+    allPlayers.forEach { it.assertInGameWithNCards(0) }
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { it.assertInGameWithNCards(3) }
     for (i in 1..9) {
       server.playCard(allPlayers.nextPlayer())
@@ -124,6 +128,8 @@ class Tests {
     server.playCard(allPlayers[2])
     allPlayers.forEach { assertEquals(2, it.lives) }
 
+    allPlayers.forEach { it.assertInGameWithNCards(0) }
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { it.assertInGameWithNCards(2) }
     allPlayers[0].cards = mutableListOf(Card(value = 25), Card(value = 64))
     allPlayers[1].cards = mutableListOf(Card(value = 53), Card(value = 69))
@@ -179,10 +185,11 @@ class Tests {
     allPlayers[2].assertInGameWithNCards(1)
 
     server.voteToThrowStar(player3)
-    allPlayers.forEach { it.assertInGameWithNCards(2) }
+    allPlayers.forEach { it.assertInGameWithNCards(0) }
     allPlayers.forEach { assertEquals(1, it.stars) }
     allPlayers.forEach { assertFalse(it.isVotingToThrowStar) }
 
+    allPlayers.forEach { server.ready(it) }
     allPlayers[0].cards = mutableListOf(Card(value = 11), Card(value = 50))
     allPlayers[1].cards = mutableListOf(Card(value = 33), Card(value = 88))
     allPlayers[2].cards = mutableListOf(Card(value = 17), Card(value = 90))
@@ -245,7 +252,6 @@ class Tests {
     server.playCard(allPlayers[2])
     allPlayers.forEach { assertFalse(it.isVotingToThrowStar) }
     allPlayers.forEach { assertEquals(1, it.stars) }
-    allPlayers.forEach { it.assertInGameWithNCards(2) }
   }
 
   @Test
@@ -388,6 +394,7 @@ class Tests {
       repeat((roundIndex + 1) * allPlayers.size) {
         server.playCard(allPlayers.nextPlayer())
       }
+      allPlayers.forEach { server.ready(it) }
     }
     allPlayers.forEach { assertEquals(GameWon, it.state) }
   }
@@ -416,56 +423,67 @@ class Tests {
 
     // No reward after round 1.
     repeat(2) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { assertEquals(2, it.currentRound) }
     assertCountsEqual(lives = 2, stars = 1)
 
     // Star after round 2.
     repeat(4) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { assertEquals(3, it.currentRound) }
     assertCountsEqual(lives = 2, stars = 2)
 
     // Life after round 3.
     repeat(6) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { assertEquals(4, it.currentRound) }
     assertCountsEqual(lives = 3, stars = 2)
 
     // No reward after round 4.
     repeat(8) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { assertEquals(5, it.currentRound) }
     assertCountsEqual(lives = 3, stars = 2)
 
     // Star after round 5.
     repeat(10) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { assertEquals(6, it.currentRound) }
     assertCountsEqual(lives = 3, stars = 3)
 
     // Life after round 6.
     repeat(12) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { assertEquals(7, it.currentRound) }
     assertCountsEqual(lives = 4, stars = 3)
 
     // No reward after round 7.
     repeat(14) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { assertEquals(8, it.currentRound) }
     assertCountsEqual(lives = 4, stars = 3)
 
     // Star after round 8.
     repeat(16) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { assertEquals(9, it.currentRound) }
     assertCountsEqual(lives = 4, stars = 4)
 
     // Life after round 9.
     repeat(18) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { assertEquals(10, it.currentRound) }
     assertCountsEqual(lives = 5, stars = 4)
 
     // No reward after round 10.
     repeat(20) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { assertEquals(11, it.currentRound) }
     assertCountsEqual(lives = 5, stars = 4)
 
     // No reward after round 11.
     repeat(22) { server.playCard(allPlayers.nextPlayer()) }
+    allPlayers.forEach { server.ready(it) }
     allPlayers.forEach { assertEquals(12, it.currentRound) }
     assertCountsEqual(lives = 5, stars = 4)
   }
@@ -599,6 +617,8 @@ class TestSupportTests {
           isVotingToThrowStar = Random.nextBoolean(),
           playedCards = mutableListOf(),
           levelReward = LevelReward.NONE,
+          roundEnded = false,
+          allPlayers = listOf(),
         ),
     )
 }

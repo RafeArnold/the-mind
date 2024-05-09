@@ -51,14 +51,15 @@ class EndToEndTests {
     val allPlayers = server.startNewGame(browser)
 
     allPlayers.forEach { it.assertHasNCards(1) }
-    repeat(2) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    repeat(3) { allPlayers.nextPlayer().playCard() }
+    allPlayers.forEach { it.assertHasNCards(0) }
+    allPlayers.forEach { it.toggleReady() }
     allPlayers.forEach { it.assertHasNCards(2) }
-    repeat(5) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    repeat(6) { allPlayers.nextPlayer().playCard() }
+    allPlayers.forEach { it.assertHasNCards(0) }
+    allPlayers.forEach { it.toggleReady() }
     allPlayers.forEach { it.assertHasNCards(3) }
-    repeat(8) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    repeat(9) { allPlayers.nextPlayer().playCard() }
 
     allPlayers.forEach { it.assertHasWon() }
   }
@@ -71,7 +72,7 @@ class EndToEndTests {
     allPlayers.forEach { it.assertHasNLives(1) }
 
     val incorrectNextPlayer = allPlayers.first { it != allPlayers.nextPlayer() }
-    incorrectNextPlayer.playCard(toCompleteRound = true)
+    incorrectNextPlayer.playCard()
 
     allPlayers.forEach { it.assertHasLost() }
   }
@@ -84,8 +85,10 @@ class EndToEndTests {
     allPlayers.forEach { it.assertHasNThrowingStars(1) }
 
     // Complete first round.
-    repeat(2) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    repeat(3) { allPlayers.nextPlayer().playCard() }
+
+    // Start second round.
+    allPlayers.forEach { it.toggleReady() }
 
     allPlayers.forEach { it.assertHasNThrowingStars(1) }
 
@@ -102,7 +105,7 @@ class EndToEndTests {
     allPlayers.forEach { it.assertHasNThrowingStars(1) }
 
     // Play a card.
-    allPlayers.nextPlayer().playCard(toCompleteRound = false)
+    allPlayers.nextPlayer().playCard()
 
     // Votes reset.
     allPlayers.forEach {
@@ -135,12 +138,14 @@ class EndToEndTests {
     allPlayers.forEach { it.assertHasNLives(3) }
 
     // Complete first round.
-    repeat(2) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    repeat(3) { allPlayers.nextPlayer().playCard() }
+
+    // Start second round.
+    allPlayers.forEach { it.toggleReady() }
 
     allPlayers.forEach { it.assertHasNLives(3) }
 
-    allPlayers.first { it != allPlayers.nextPlayer() }.playCard(toCompleteRound = false)
+    allPlayers.first { it != allPlayers.nextPlayer() }.playCard()
 
     allPlayers.forEach { it.assertHasNLives(2) }
   }
@@ -175,10 +180,9 @@ class EndToEndTests {
     allPlayers.forEach { it.assertHasNLives(1) }
 
     val nextPlayer = allPlayers.nextPlayer()
-    nextPlayer.playCard(toCompleteRound = false)
+    nextPlayer.playCard()
 
-    allPlayers.first { it != allPlayers.nextPlayer() && it != nextPlayer }
-      .playCard(toCompleteRound = true)
+    allPlayers.first { it != allPlayers.nextPlayer() && it != nextPlayer }.playCard()
 
     allPlayers.forEach { it.assertHasLost() }
   }
@@ -188,8 +192,7 @@ class EndToEndTests {
     server = startServer(gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers = server.startNewGame(browser)
-    repeat(2) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    repeat(3) { allPlayers.nextPlayer().playCard() }
     allPlayers.forEach { it.assertHasWon() }
 
     allPlayers.forEach { it.page.reload() }
@@ -202,7 +205,7 @@ class EndToEndTests {
     server = startServer(gameConfig(roundCount = 1, startingLivesCount = 1, startingStarsCount = 0))
 
     val allPlayers = server.startNewGame(browser)
-    allPlayers.first { it != allPlayers.nextPlayer() }.playCard(toCompleteRound = true)
+    allPlayers.first { it != allPlayers.nextPlayer() }.playCard()
     allPlayers.forEach { it.assertHasLost() }
 
     allPlayers.forEach { it.page.reload() }
@@ -353,8 +356,7 @@ class EndToEndTests {
 
     val allPlayers = server.startNewGame(browser)
 
-    repeat(2) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    repeat(3) { allPlayers.nextPlayer().playCard() }
 
     allPlayers.forEach {
       it.assertHasWon()
@@ -371,7 +373,7 @@ class EndToEndTests {
 
     val allPlayers = server.startNewGame(browser)
 
-    allPlayers.first { it != allPlayers.nextPlayer() }.playCard(toCompleteRound = false)
+    allPlayers.first { it != allPlayers.nextPlayer() }.playCard()
 
     allPlayers.forEach {
       it.assertHasLost()
@@ -396,7 +398,7 @@ class EndToEndTests {
     // Play incorrect card.
     val sortedPlayers = allPlayers.sortedByMinCardValue()
     val incorrectPlayer = sortedPlayers[1]
-    incorrectPlayer.playCard(toCompleteRound = false)
+    incorrectPlayer.playCard()
     expectedCounts[sortedPlayers[0]] = expectedCounts[sortedPlayers[0]]!! - 1
     expectedCounts[incorrectPlayer] = expectedCounts[incorrectPlayer]!! - 1
     allPlayers.forEach { p ->
@@ -404,7 +406,14 @@ class EndToEndTests {
     }
 
     // Play the last card of the round.
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    allPlayers.nextPlayer().playCard()
+    expectedCounts = allPlayers.associateWith { 0 }.toMutableMap()
+    allPlayers.forEach { p ->
+      p.assertOtherPlayerCardCountsAre(expectedCounts.filterKeys { p != it })
+    }
+
+    // Start the next round.
+    allPlayers.forEach { it.toggleReady() }
     expectedCounts = allPlayers.associateWith { 2 }.toMutableMap()
     allPlayers.forEach { p ->
       p.assertOtherPlayerCardCountsAre(expectedCounts.filterKeys { p != it })
@@ -412,7 +421,7 @@ class EndToEndTests {
 
     // Play the correct card.
     val nextPlayer = allPlayers.nextPlayer()
-    nextPlayer.playCard(toCompleteRound = false)
+    nextPlayer.playCard()
     expectedCounts[nextPlayer] = expectedCounts[nextPlayer]!! - 1
     allPlayers.forEach { p ->
       p.assertOtherPlayerCardCountsAre(expectedCounts.filterKeys { p != it })
@@ -438,17 +447,23 @@ class EndToEndTests {
     val sortedPlayers = allPlayers.sortedByMinCardValue()
     val incorrectPlayer = sortedPlayers[1]
     val incorrectPlayerMinCardValue = incorrectPlayer.minCardValue()
-    incorrectPlayer.playCard(toCompleteRound = false)
+    incorrectPlayer.playCard()
     allPlayers.forEach { p -> p.assertLastPlayedCardValueIs(incorrectPlayerMinCardValue) }
 
     // Play the last card of the round.
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    var nextPlayer = allPlayers.nextPlayer()
+    var nextPlayerMinCardValue = nextPlayer.minCardValue()
+    nextPlayer.playCard()
+    allPlayers.forEach { p -> p.assertLastPlayedCardValueIs(nextPlayerMinCardValue) }
+
+    // Start the next round.
+    allPlayers.forEach { it.toggleReady() }
     allPlayers.forEach { p -> p.assertLastPlayedCardValueIs(null) }
 
     // Play the correct card.
-    var nextPlayer = allPlayers.nextPlayer()
-    var nextPlayerMinCardValue = nextPlayer.minCardValue()
-    nextPlayer.playCard(toCompleteRound = false)
+    nextPlayer = allPlayers.nextPlayer()
+    nextPlayerMinCardValue = nextPlayer.minCardValue()
+    nextPlayer.playCard()
     allPlayers.forEach { p -> p.assertLastPlayedCardValueIs(nextPlayerMinCardValue) }
 
     // Throw a star.
@@ -458,7 +473,7 @@ class EndToEndTests {
     // Play the correct card.
     nextPlayer = allPlayers.nextPlayer()
     nextPlayerMinCardValue = nextPlayer.minCardValue()
-    nextPlayer.playCard(toCompleteRound = false)
+    nextPlayer.playCard()
     allPlayers.forEach { p -> p.assertLastPlayedCardValueIs(nextPlayerMinCardValue) }
   }
 
@@ -470,20 +485,20 @@ class EndToEndTests {
 
     allPlayers.forEach { it.assertRoundIs(1) }
 
-    repeat(2) {
-      allPlayers.nextPlayer().playCard(toCompleteRound = false)
+    repeat(3) {
+      allPlayers.nextPlayer().playCard()
       allPlayers.forEach { it.assertRoundIs(1) }
     }
 
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    allPlayers.forEach { it.toggleReady() }
 
     allPlayers.forEach { it.assertRoundIs(2) }
-    repeat(5) {
-      allPlayers.nextPlayer().playCard(toCompleteRound = false)
+    repeat(6) {
+      allPlayers.nextPlayer().playCard()
       allPlayers.forEach { it.assertRoundIs(2) }
     }
 
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    allPlayers.forEach { it.toggleReady() }
 
     allPlayers.forEach { it.assertRoundIs(3) }
   }
@@ -536,8 +551,8 @@ class EndToEndTests {
     allPlayers.forEach {
       it.assertIsNotVoting()
       it.assertOtherPlayersAreVoting(listOf())
-      it.assertRoundIs(2)
-      it.assertHasNCards(2)
+      it.assertRoundIs(1)
+      it.assertHasNCards(0)
     }
   }
 
@@ -551,14 +566,16 @@ class EndToEndTests {
     allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
 
     // Complete first round.
-    repeat(2) {
+    repeat(3) {
       allPlayers.nextPlayer().run {
         expectedPlayedCards.add(minCardValue())
-        playCard(toCompleteRound = false)
+        playCard()
       }
       allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
     }
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+
+    // Start second round.
+    allPlayers.forEach { it.toggleReady() }
     expectedPlayedCards.clear()
     allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
 
@@ -572,11 +589,18 @@ class EndToEndTests {
     // Play incorrect card.
     expectedPlayedCards.add(allPlayers.sortedByMinCardValue()[0].minCardValue())
     expectedPlayedCards.add(allPlayers.sortedByMinCardValue()[1].minCardValue())
-    allPlayers.sortedByMinCardValue()[1].playCard(toCompleteRound = false)
+    allPlayers.sortedByMinCardValue()[1].playCard()
     allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
 
     // Complete second round.
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    allPlayers.nextPlayer().run {
+      expectedPlayedCards.add(minCardValue())
+      playCard()
+    }
+    allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
+
+    // Start third round.
+    allPlayers.forEach { it.toggleReady() }
     expectedPlayedCards.clear()
     allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
 
@@ -584,7 +608,7 @@ class EndToEndTests {
     repeat(2) {
       allPlayers.nextPlayer().run {
         expectedPlayedCards.add(minCardValue())
-        playCard(toCompleteRound = false)
+        playCard()
       }
       allPlayers.forEach { it.assertPlayedCardsAre(expectedPlayedCards) }
     }
@@ -635,8 +659,15 @@ class EndToEndTests {
       it.assertLevelRewardIs(LevelReward.NONE)
     }
 
-    repeat(2) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    repeat(3) { allPlayers.nextPlayer().playCard() }
+
+    allPlayers.forEach {
+      it.assertHasNLives(3)
+      it.assertHasNThrowingStars(1)
+      it.assertLevelRewardIs(LevelReward.NONE)
+    }
+
+    allPlayers.forEach { it.toggleReady() }
 
     allPlayers.forEach {
       it.assertRoundIs(2)
@@ -645,8 +676,16 @@ class EndToEndTests {
       it.assertLevelRewardIs(LevelReward.STAR)
     }
 
-    repeat(5) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    repeat(6) { allPlayers.nextPlayer().playCard() }
+
+    allPlayers.forEach {
+      it.assertRoundIs(2)
+      it.assertHasNLives(3)
+      it.assertHasNThrowingStars(2)
+      it.assertLevelRewardIs(LevelReward.NONE)
+    }
+
+    allPlayers.forEach { it.toggleReady() }
 
     allPlayers.forEach {
       it.assertRoundIs(3)
@@ -655,8 +694,16 @@ class EndToEndTests {
       it.assertLevelRewardIs(LevelReward.LIFE)
     }
 
-    repeat(8) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    repeat(9) { allPlayers.nextPlayer().playCard() }
+
+    allPlayers.forEach {
+      it.assertRoundIs(3)
+      it.assertHasNLives(4)
+      it.assertHasNThrowingStars(2)
+      it.assertLevelRewardIs(LevelReward.NONE)
+    }
+
+    allPlayers.forEach { it.toggleReady() }
 
     allPlayers.forEach {
       it.assertRoundIs(4)
@@ -665,8 +712,16 @@ class EndToEndTests {
       it.assertLevelRewardIs(LevelReward.NONE)
     }
 
-    repeat(11) { allPlayers.nextPlayer().playCard(toCompleteRound = false) }
-    allPlayers.nextPlayer().playCard(toCompleteRound = true)
+    repeat(12) { allPlayers.nextPlayer().playCard() }
+
+    allPlayers.forEach {
+      it.assertRoundIs(4)
+      it.assertHasNLives(4)
+      it.assertHasNThrowingStars(2)
+      it.assertLevelRewardIs(LevelReward.NONE)
+    }
+
+    allPlayers.forEach { it.toggleReady() }
 
     allPlayers.forEach {
       it.assertRoundIs(5)
@@ -759,6 +814,66 @@ class EndToEndTests {
     allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[0].name, allPlayers[1].name)) }
     allPlayers[2].toggleReady()
     allPlayers.forEach { it.assertRoundIs(1) }
+  }
+
+  @Test
+  fun `after round completion all players have to ready up before next round starts`() {
+    server = startServer()
+
+    val allPlayers = server.startNewGame(browser)
+
+    repeat(3) { allPlayers.nextPlayer().playCard() }
+
+    allPlayers.forEach { it.assertReadyPlayersAre(emptyList()) }
+    allPlayers[0].toggleReady()
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[0].name)) }
+    allPlayers[1].toggleReady()
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[0].name, allPlayers[1].name)) }
+    allPlayers[0].toggleReady()
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[1].name)) }
+    allPlayers[0].toggleReady()
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[0].name, allPlayers[1].name)) }
+    allPlayers[2].toggleReady()
+    allPlayers.forEach { it.assertRoundIs(2) }
+
+    repeat(6) { allPlayers.nextPlayer().playCard() }
+
+    allPlayers.forEach { it.assertReadyPlayersAre(emptyList()) }
+    allPlayers[2].toggleReady()
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[2].name)) }
+    allPlayers[1].toggleReady()
+    allPlayers.forEach { it.assertReadyPlayersAre(listOf(allPlayers[1].name, allPlayers[2].name)) }
+    allPlayers[0].toggleReady()
+    allPlayers.forEach { it.assertRoundIs(3) }
+  }
+
+  @Test
+  fun `player list is not shown mid-round`() {
+    server = startServer()
+
+    val allPlayers = server.startNewGame(browser)
+
+    allPlayers.nextPlayer().playCard()
+
+    allPlayers.forEach { assertThat(it.page.allPlayersList()).not().isVisible() }
+
+    allPlayers.nextPlayer().playCard()
+
+    allPlayers.forEach { assertThat(it.page.allPlayersList()).not().isVisible() }
+
+    allPlayers.nextPlayer().playCard()
+
+    allPlayers.forEach { assertThat(it.page.allPlayersList()).isVisible() }
+    allPlayers.forEach { it.assertReadyPlayersAre(emptyList()) }
+
+    allPlayers.forEach { it.toggleReady() }
+
+    allPlayers.forEach { assertThat(it.page.allPlayersList()).not().isVisible() }
+
+    repeat(6) { allPlayers.nextPlayer().playCard() }
+
+    allPlayers.forEach { assertThat(it.page.allPlayersList()).isVisible() }
+    allPlayers.forEach { it.assertReadyPlayersAre(emptyList()) }
   }
 }
 
@@ -892,7 +1007,7 @@ private fun PlayerContext.assertReadyPlayersAre(names: List<String>) {
 
 private fun Page.assertReadyPlayersAre(names: List<String>) {
   val readyPlayers =
-    getByTestId("all-players")
+    allPlayersList()
       .locator("[data-testid='player']:has([data-testid='is-ready-display'])")
       .getByTestId("player-name")
   assertThat(readyPlayers).hasCount(names.size)
@@ -904,7 +1019,7 @@ private fun PlayerContext.assertAllPlayersAre(names: List<String>) {
 }
 
 private fun Page.assertAllPlayersAre(names: List<String>) {
-  val allPlayers = getByTestId("all-players").getByTestId("player-name")
+  val allPlayers = allPlayersList().getByTestId("player-name")
   assertThat(allPlayers).hasCount(names.size)
   assertThat(allPlayers).hasText(names.toTypedArray())
 }
@@ -1033,21 +1148,19 @@ private fun Page.assertHasWon() {
   assertThat(winnerText()).isVisible()
 }
 
-private fun PlayerContext.playCard(toCompleteRound: Boolean) {
-  page.playCard(toCompleteRound = toCompleteRound)
+private fun PlayerContext.playCard() {
+  page.playCard()
 }
 
-private fun Page.playCard(toCompleteRound: Boolean) {
+private fun Page.playCard() {
   val cardList = cardList()
   val cardValues = cardList.allTextContents().sortedByDescending { it.trim().toInt() }
   assertThat(cardList).hasText(cardValues.toTypedArray())
   val nextCard = cardList.nth(0)
   assertThat(nextCard).hasText(cardValues[0])
   getByTestId("play-card-button").click()
-  if (!toCompleteRound) {
-    assertThat(cardList).hasCount(cardValues.size - 1)
-    assertThat(cardList).hasText(cardValues.dropLast(1).toTypedArray())
-  }
+  assertThat(cardList).hasCount(cardValues.size - 1)
+  assertThat(cardList).hasText(cardValues.dropLast(1).toTypedArray())
 }
 
 private fun List<PlayerContext>.sortedByMinCardValue(): List<PlayerContext> =
@@ -1082,6 +1195,8 @@ private fun Page.assertHasNCards(n: Int) {
   assertThat(cardList).hasCount(n)
   assertThat(cardList).hasText((1..n).map { cardValuePattern }.toTypedArray())
 }
+
+private fun Page.allPlayersList(): Locator = getByTestId("all-players")
 
 private fun Page.starLevelReward(): Locator = levelReward().getByTestId("star")
 
