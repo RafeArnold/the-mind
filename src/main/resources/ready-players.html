@@ -1,4 +1,4 @@
-<ul class="mx-10 mt-5 p-5 max-w-xl rounded-2xl border-indigo-500 border-2" data-testid="all-players">
+<ul class="mx-10 mt-0 sm:mt-5 p-5 max-w-xl rounded-2xl border-indigo-500 border-2" data-testid="all-players">
   {% for player in model.allPlayers %}
   <li class="flex items-center justify-between" data-testid="player">
     <div data-testid="player-name" class="truncate">{{ player.name }}</div>
@@ -6,7 +6,7 @@
   </li>
   {% endfor %}
 </ul>
-<form ws-send class="mt-10">
+<form ws-send class="mt-5 sm:mt-10">
   <input type="hidden" name="action" value="{% if model.isReady %}unready{% else %}ready{% endif %}">
   <div class="text-center">
     <button type="submit" class="py-2 px-4 sm:px-6 rounded-lg bg-indigo-500 text-center text-xl sm:text-2xl" data-testid="toggle-ready-button">{% if model.isReady %}unready{% else %}ready{% endif %}</button>
