@@ -39,7 +39,7 @@ dependencies {
 
   implementation("org.sqids:sqids:0.1.0")
 
-  implementation("ch.qos.logback:logback-classic:1.5.7")
+  implementation("ch.qos.logback:logback-classic:1.5.8")
 
   testImplementation(kotlin("test"))
   testImplementation("org.junit.jupiter:junit-jupiter-params")
