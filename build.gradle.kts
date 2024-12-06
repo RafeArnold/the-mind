@@ -9,11 +9,12 @@ buildscript {
   }
   dependencies {
     classpath("io.pebbletemplates:pebble:3.2.2")
+    classpath("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.1.0")
   }
 }
 
 plugins {
-  kotlin("jvm") version "2.0.21"
+  kotlin("jvm") version "2.1.0"
   id("org.jmailen.kotlinter") version "4.5.0"
   id("com.github.node-gradle.node") version "7.1.0"
   id("com.github.johnrengelman.shadow") version "8.1.1"
@@ -29,6 +30,7 @@ repositories {
 }
 
 dependencies {
+//  implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.1.0")
   implementation(platform("org.http4k:http4k-bom:5.37.1.1"))
   implementation("org.http4k:http4k-core")
   implementation("org.http4k:http4k-server-jetty")
