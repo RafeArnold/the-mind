@@ -78,6 +78,7 @@ task("buildCss", NpxTask::class) {
     "-o", "./src/main/resources/assets/index.min.css",
     "-m",
   )
+  dependsOn("npmInstall")
 }
 
 /**
