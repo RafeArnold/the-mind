@@ -8,7 +8,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath("io.pebbletemplates:pebble:3.2.2")
+    classpath("io.pebbletemplates:pebble:3.2.3")
     classpath("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.1.10")
   }
 }
@@ -37,7 +37,7 @@ dependencies {
   implementation("org.http4k:http4k-template-core")
   implementation("org.http4k:http4k-format-jackson")
 
-  implementation("io.pebbletemplates:pebble:3.2.2")
+  implementation("io.pebbletemplates:pebble:3.2.3")
 
   implementation("org.sqids:sqids:0.1.0")
 
