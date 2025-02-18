@@ -7,6 +7,7 @@ import org.http4k.core.ContentType
 import org.http4k.core.Filter
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
+import org.http4k.core.PolyHandler
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
@@ -26,11 +27,11 @@ import org.http4k.lens.Header
 import org.http4k.routing.ResourceLoader
 import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
+import org.http4k.routing.bindWs
 import org.http4k.routing.routes
 import org.http4k.routing.static
 import org.http4k.server.Http4kServer
 import org.http4k.server.Jetty
-import org.http4k.server.PolyHandler
 import org.http4k.server.asServer
 import org.http4k.template.ViewModel
 import org.http4k.template.viewModel
@@ -40,7 +41,6 @@ import org.http4k.websocket.WsHandler
 import org.http4k.websocket.WsMessage
 import org.http4k.websocket.WsResponse
 import org.http4k.websocket.then
-import org.http4k.routing.ws.bind as wsBind
 
 fun startServer(
   gameServer: Server = InMemoryServer(),
@@ -52,11 +52,11 @@ fun startServer(
   val wsView: BiDiWsMessageLens<ViewModel> = WsMessage.viewModel(templateRenderer).toLens()
   val router =
     routes(
-      Assets(),
-      Index(view, gameServer),
-      CreateGame(gameServer),
-      JoinGame(gameServer),
-      LeaveGame(gameServer),
+      assets(),
+      index(view, gameServer),
+      createGame(gameServer),
+      joinGame(gameServer),
+      leaveGame(gameServer),
     )
   val app =
     PolyHandler(
@@ -87,14 +87,14 @@ fun startServer(
   return server
 }
 
-class Assets(
-  loader: ResourceLoader = AssetsLoaderFactory.Delegate().create(),
-) : RoutingHttpHandler by static(loader).withBasePath("/assets")
+fun assets(loader: ResourceLoader = AssetsLoaderFactory.Delegate().create()): RoutingHttpHandler =
+  static(loader).withBasePath("/assets")
 
-class Index(
+fun index(
   view: BiDiBodyLens<ViewModel>,
   server: Server,
-) : RoutingHttpHandler by "/" bind GET to { request ->
+): RoutingHttpHandler =
+  "/" bind GET to { request ->
     val connection = server.connect(request)
     val viewModel: ViewModel =
       if (connection == null) {
@@ -129,25 +129,28 @@ class Index(
     Response(OK).with(view of viewModel)
   }
 
-class CreateGame(server: Server) : RoutingHttpHandler by "/create" bind POST to {
-  val player = server.createGame(playerName = it.form("playerName")!!)
-  handleNewPlayer(player)
-}
+fun createGame(server: Server): RoutingHttpHandler =
+  "/create" bind POST to {
+    val player = server.createGame(playerName = it.form("playerName")!!)
+    handleNewPlayer(player)
+  }
 
-class JoinGame(server: Server) : RoutingHttpHandler by "/join" bind POST to {
-  val player = server.joinGame(gameId = it.form("gameId")!!, playerName = it.form("playerName")!!)
-  handleNewPlayer(player)
-}
+fun joinGame(server: Server): RoutingHttpHandler =
+  "/join" bind POST to {
+    val player = server.joinGame(gameId = it.form("gameId")!!, playerName = it.form("playerName")!!)
+    handleNewPlayer(player)
+  }
 
-class LeaveGame(server: Server) : RoutingHttpHandler by "/leave" bind POST to {
-  server.leave(playerId = it.playerId!!)
-  redirectHome()
-}
+fun leaveGame(server: Server): RoutingHttpHandler =
+  "/leave" bind POST to {
+    server.leave(playerId = it.playerId!!)
+    redirectHome()
+  }
 
 class Listen(
   server: Server,
   view: BiDiWsMessageLens<ViewModel>,
-) : WsHandler by "/listen" wsBind { request ->
+) : WsHandler by "/listen" bindWs { request ->
     logger.debug("WS request received")
     val connection = server.connect(request)!!
     val playerInfo = "${connection.player.id} '${connection.player}'"
