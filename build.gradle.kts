@@ -31,7 +31,7 @@ repositories {
 
 dependencies {
 //  implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.1.0")
-  implementation(platform("org.http4k:http4k-bom:6.0.1.0"))
+  implementation(platform("org.http4k:http4k-bom:6.1.0.1"))
   implementation("org.http4k:http4k-core")
   implementation("org.http4k:http4k-server-jetty")
   implementation("org.http4k:http4k-template-core")
