@@ -9,7 +9,6 @@ buildscript {
   }
   dependencies {
     classpath("io.pebbletemplates:pebble:3.2.3")
-    classpath("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.1.10")
   }
 }
 
@@ -30,7 +29,6 @@ repositories {
 }
 
 dependencies {
-//  implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.1.0")
   implementation(platform("org.http4k:http4k-bom:6.2.0.0"))
   implementation("org.http4k:http4k-core")
   implementation("org.http4k:http4k-server-jetty")
