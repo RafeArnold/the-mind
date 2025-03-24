@@ -13,7 +13,7 @@ buildscript {
 }
 
 plugins {
-  kotlin("jvm") version "2.1.10"
+  kotlin("jvm") version "2.1.20"
   id("org.jmailen.kotlinter") version "5.0.1"
   id("com.github.node-gradle.node") version "7.1.0"
   id("com.github.johnrengelman.shadow") version "8.1.1"
