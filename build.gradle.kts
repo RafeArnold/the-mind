@@ -9,7 +9,7 @@ buildscript {
   }
   dependencies {
     classpath("io.pebbletemplates:pebble:3.2.3")
-    classpath("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.1.10")
+    classpath("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.1.20")
   }
 }
 
