@@ -70,12 +70,15 @@ tasks.processResources {
 
 task("buildCss", NpxTask::class) {
   dependsOn("buildTemplateVariants")
-  command = "tailwindcss"
+  command = "@tailwindcss/cli"
   args = listOf(
     "-i", "./src/main/resources/input/index.css",
     "-o", "./src/main/resources/assets/index.min.css",
     "-m",
   )
+  inputs.files(fileTree("./src/main/resources") { include("*.html") })
+  inputs.file("./src/main/resources/input/index.css")
+  outputs.file("./src/main/resources/assets/index.min.css")
   dependsOn("npmInstall")
 }
 

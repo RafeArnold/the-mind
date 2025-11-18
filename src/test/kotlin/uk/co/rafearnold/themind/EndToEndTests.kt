@@ -1094,7 +1094,7 @@ private fun PlayerContext.assertIsVoting() {
 
 private fun Page.assertIsVoting() {
   assertThat(isVotingToThrowStarCheckbox()).isChecked()
-  assertThat(voteToThrowStarButton()).hasCSS("color", "rgb(245, 158, 11)")
+  assertThat(voteToThrowStarButton()).hasCSS("color", "oklch(0.769 0.188 70.08)")
 }
 
 private fun PlayerContext.assertIsNotVoting() {
@@ -1103,7 +1103,7 @@ private fun PlayerContext.assertIsNotVoting() {
 
 private fun Page.assertIsNotVoting() {
   assertThat(isVotingToThrowStarCheckbox()).not().isChecked()
-  assertThat(voteToThrowStarButton()).hasCSS("color", "rgb(228, 228, 231)")
+  assertThat(voteToThrowStarButton()).hasCSS("color", "oklch(0.92 0.004 286.32)")
 }
 
 private fun PlayerContext.assertOtherPlayersAreVoting(names: List<String>) {
