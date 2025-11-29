@@ -101,13 +101,14 @@ fun index(
         HomeViewModel
       } else {
         when (val state = connection.state) {
-          is InLobby ->
+          is InLobby -> {
             LobbyViewModel(
               gameId = connection.gameId,
               isReady = connection.player.isReady,
               allPlayers = state.allPlayers,
             )
-          is InGame ->
+          }
+          is InGame -> {
             GameViewModel(
               currentRound = state.currentRound,
               currentLivesCount = state.lives,
@@ -121,9 +122,16 @@ fun index(
               isReady = connection.player.isReady,
               allPlayers = state.allPlayers,
             )
-          is GameLost -> GameLostViewModel
-          is GameWon -> GameWonViewModel
-          is PlayerLeft -> PlayerLeftViewModel(playerThatLeftName = state.playerName)
+          }
+          is GameLost -> {
+            GameLostViewModel
+          }
+          is GameWon -> {
+            GameWonViewModel
+          }
+          is PlayerLeft -> {
+            PlayerLeftViewModel(playerThatLeftName = state.playerName)
+          }
         }
       }
     Response(OK).with(view of viewModel)
@@ -187,9 +195,13 @@ private fun Websocket.sendView(
 ) {
   val model: ViewModel =
     when (val state = connection.state) {
-      is GameLost -> WsGameLostViewModel
-      is GameWon -> WsGameWonViewModel
-      is InGame ->
+      is GameLost -> {
+        WsGameLostViewModel
+      }
+      is GameWon -> {
+        WsGameWonViewModel
+      }
+      is InGame -> {
         WsGameViewModel(
           currentRound = state.currentRound,
           currentLivesCount = state.lives,
@@ -203,13 +215,17 @@ private fun Websocket.sendView(
           isReady = connection.player.isReady,
           allPlayers = state.allPlayers,
         )
-      is InLobby ->
+      }
+      is InLobby -> {
         WsLobbyViewModel(
           gameId = connection.gameId,
           isReady = connection.player.isReady,
           allPlayers = state.allPlayers,
         )
-      is PlayerLeft -> WsPlayerLeftViewModel(playerThatLeftName = state.playerName)
+      }
+      is PlayerLeft -> {
+        WsPlayerLeftViewModel(playerThatLeftName = state.playerName)
+      }
     }
   send(view(model))
 }
