@@ -43,7 +43,7 @@ dependencies {
 
   testImplementation(kotlin("test"))
   testImplementation("org.junit.jupiter:junit-jupiter-params")
-  testImplementation("com.microsoft.playwright:playwright:1.60.0")
+  testImplementation("com.microsoft.playwright:playwright:1.61.0")
 }
 
 tasks.test {
